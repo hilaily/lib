@@ -1,4 +1,4 @@
-module github.com/hilaily/lib/log
+module github.com/hilaily/lib/logrustool
 
 go 1.19
 
