@@ -6,6 +6,17 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func FormatOnlyMsg() {
+	logrus.SetFormatter(&onlyMsgFmt{})
+	//logrus.SetFormatter(&logrus.TextFormatter{})
+}
+
+type onlyMsgFmt struct{}
+
+func (o *onlyMsgFmt) Format(entry *logrus.Entry) ([]byte, error) {
+	return []byte(entry.Message), nil
+}
+
 func InitLevel(l logrus.Level) {
 	l1 := os.Getenv("LOGRUS_LEVEL")
 	v, err := logrus.ParseLevel(l1)
