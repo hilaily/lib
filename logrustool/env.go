@@ -20,6 +20,7 @@ func (o *onlyMsgFmt) Format(entry *logrus.Entry) ([]byte, error) {
 	return []byte(entry.Message), nil
 }
 
+// Param: _filepath can be relative path
 func SetRotateSimple(_filepath string) {
 	lumberjackLogger := &lumberjack.Logger{
 		// Log file abbsolute path, os agnostic
