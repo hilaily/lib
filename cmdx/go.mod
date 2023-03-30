@@ -1,3 +1,3 @@
-module github.com/hilaily/lib/exec
+module github.com/hilaily/lib/cmdx
 
 go 1.20
