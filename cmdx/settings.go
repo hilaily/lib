@@ -7,40 +7,28 @@ import (
 )
 
 var (
-	std ISet = &DefaultSet{}
+	std ISet = &DefaultSet{
+		IPrint: &DefaultPrint{},
+	}
 )
 
 type ISet interface {
+	IPrint
+
+	CheckErr(err error)
+	Throw(format string, a ...any)
+	Recover(r any)
+}
+
+type IPrint interface {
 	Normal(format string, a ...any)
 	Green(format string, a ...any)
 	Yellow(format string, a ...any)
 	Red(format string, a ...any)
-
-	CheckErr(err error)
-	Throw(format string, a ...any)
-	Recover(r interface{})
 }
 
-func Set(s ISet) {
-	std = s
-}
-
-type DefaultSet struct{}
-
-func (d *DefaultSet) Normal(format string, a ...any) {
-	fmt.Printf(format, a...)
-}
-
-func (d *DefaultSet) Green(format string, a ...any) {
-	color.Green(format, a...)
-}
-
-func (d *DefaultSet) Yellow(format string, a ...any) {
-	color.Yellow(format, a...)
-}
-
-func (d *DefaultSet) Red(format string, a ...any) {
-	color.Red(format, a...)
+type DefaultSet struct {
+	IPrint
 }
 
 func (d *DefaultSet) CheckErr(err error) {
@@ -55,6 +43,24 @@ func (d *DefaultSet) Throw(format string, a ...any) {
 
 func (d *DefaultSet) Recover(r interface{}) {
 	if r != nil {
-		color.Red("%v", r)
+		d.Red("%v", r)
 	}
+}
+
+type DefaultPrint struct{}
+
+func (d *DefaultPrint) Normal(format string, a ...any) {
+	fmt.Printf(format, a...)
+}
+
+func (d *DefaultPrint) Green(format string, a ...any) {
+	color.Green(format, a...)
+}
+
+func (d *DefaultPrint) Yellow(format string, a ...any) {
+	color.Yellow(format, a...)
+}
+
+func (d *DefaultPrint) Red(format string, a ...any) {
+	color.Red(format, a...)
 }
