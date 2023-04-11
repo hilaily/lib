@@ -38,12 +38,16 @@ func (d *DefaultSet) CheckErr(err error) {
 }
 
 func (d *DefaultSet) Throw(format string, a ...any) {
-	panic(fmt.Errorf(format, a...))
+	panic(&Err{error: fmt.Errorf(format, a...)})
 }
 
 func (d *DefaultSet) Recover(r interface{}) {
 	if r != nil {
-		d.Red("%v", r)
+		if t, ok := r.(*Err); ok {
+			d.Red("%v", t.Error())
+		} else {
+			panic(r)
+		}
 	}
 }
 
@@ -63,4 +67,8 @@ func (d *DefaultPrint) Yellow(format string, a ...any) {
 
 func (d *DefaultPrint) Red(format string, a ...any) {
 	color.Red(format, a...)
+}
+
+type Err struct {
+	error
 }

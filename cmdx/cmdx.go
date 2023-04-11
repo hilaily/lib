@@ -15,26 +15,24 @@ func ToCommand(cmd string) *exec.Cmd {
 	return c
 }
 
-func Run(cmd string, envs ...string) error {
-	c := ToCommand(cmd)
-	return RealRun(c, os.Stdout, os.Stderr, os.Stdin, envs...)
+func Run(format string, a ...any) error {
+	return New(format, a...).Run()
 }
 
-func MustRun(cmd string, envs ...string) {
-	err := Run(cmd, envs...)
+func MustRun(format string, a ...any) {
+	err := Run(format, a...)
 	std.CheckErr(err)
 }
 
-func MustSHRun(cmdStr string, envs ...string) {
-	c := exec.Command("sh", "-c", cmdStr)
-	err := RealRun(c, os.Stdout, os.Stderr, os.Stdin, envs...)
+func MustSHRun(format string, a ...any) {
+	c := exec.Command("sh", "-c", fmt.Sprintf(format, a...))
+	err := New2(c).Run()
 	std.CheckErr(err)
 }
 
-func RunCombinedOutput(cmd string, envs ...string) (string, error) {
-	c := ToCommand(cmd)
+func RunCombinedOutput(cmd string, envs []string) (string, error) {
 	var b bytes.Buffer
-	err := RealRun(c, &b, &b, nil, envs...)
+	err := New(cmd).SetEnv(envs...).SetOutput(&b, &b).Run()
 
 	r := b.String()
 	if err != nil {
@@ -43,27 +41,55 @@ func RunCombinedOutput(cmd string, envs ...string) (string, error) {
 	return r, nil
 }
 
-func RealRun(cmd *exec.Cmd, output, errput io.Writer, in io.Reader, envs ...string) error {
-	env := os.Environ()
+func New(format string, a ...any) *CMD {
+	c := ToCommand(fmt.Sprintf(format, a...))
+	return New2(c)
+}
+
+func New2(cmd *exec.Cmd) *CMD {
+	c := &CMD{}
+	c.cmd = cmd
+	c.cmd.Stdin = os.Stdin
+	c.cmd.Stdout = os.Stdout
+	c.cmd.Stderr = os.Stderr
+	return c
+}
+
+type CMD struct {
+	str string
+	cmd *exec.Cmd
+}
+
+func (c *CMD) SetEnv(envs ...string) *CMD {
+	e := os.Environ()
 	if len(envs) > 0 {
-		env = append(env, envs...)
+		e = append(e, envs...)
 	}
-	cmd.Env = env
+	c.cmd.Env = e
+	return c
+}
+
+func (c *CMD) SetInput(in io.Reader) *CMD {
+	c.cmd.Stdin = in
+	return c
+}
+
+func (c *CMD) SetOutput(output, errput io.Writer) *CMD {
 	if output != nil {
-		cmd.Stdout = output
+		c.cmd.Stdout = output
 	}
 	if errput != nil {
-		cmd.Stderr = errput
+		c.cmd.Stderr = errput
 	}
-	if in != nil {
-		cmd.Stdin = in
-	}
+	return c
+}
 
-	io.WriteString(cmd.Stdout, cmd.String()+"\n")
-	err := cmd.Start()
+func (c *CMD) Run() error {
+	io.WriteString(c.cmd.Stdout, c.cmd.String()+"\n")
+	err := c.cmd.Start()
 	if err != nil {
 		return err
 	}
 
-	return cmd.Wait()
+	return c.cmd.Wait()
 }
