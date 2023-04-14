@@ -2,11 +2,13 @@ package cmdx
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 func ToCommand(cmd string) *exec.Cmd {
@@ -32,7 +34,7 @@ func MustSHRun(format string, a ...any) {
 
 func RunCombinedOutput(cmd string, envs []string) (string, error) {
 	var b bytes.Buffer
-	err := New(cmd).SetEnv(envs...).SetOutput(&b, &b).Run()
+	err := New(cmd).Env(envs...).Output(&b, &b).Run()
 
 	r := b.String()
 	if err != nil {
@@ -56,11 +58,11 @@ func New2(cmd *exec.Cmd) *CMD {
 }
 
 type CMD struct {
-	str string
-	cmd *exec.Cmd
+	cmd        *exec.Cmd
+	cancelFunc context.CancelFunc
 }
 
-func (c *CMD) SetEnv(envs ...string) *CMD {
+func (c *CMD) Env(envs ...string) *CMD {
 	e := os.Environ()
 	if len(envs) > 0 {
 		e = append(e, envs...)
@@ -69,12 +71,17 @@ func (c *CMD) SetEnv(envs ...string) *CMD {
 	return c
 }
 
-func (c *CMD) SetInput(in io.Reader) *CMD {
+func (c *CMD) Dir(dir string) *CMD {
+	c.cmd.Dir = dir
+	return c
+}
+
+func (c *CMD) Input(in io.Reader) *CMD {
 	c.cmd.Stdin = in
 	return c
 }
 
-func (c *CMD) SetOutput(output, errput io.Writer) *CMD {
+func (c *CMD) Output(output, errput io.Writer) *CMD {
 	if output != nil {
 		c.cmd.Stdout = output
 	}
@@ -84,7 +91,16 @@ func (c *CMD) SetOutput(output, errput io.Writer) *CMD {
 	return c
 }
 
+func (c *CMD) Timeout(t time.Duration) *CMD {
+	ctx, cancel := context.WithTimeout(context.Background(), t)
+	newCMD := exec.CommandContext(ctx, c.cmd.Path, c.cmd.Args...)
+	c.cmd = newCMD
+	c.cancelFunc = cancel
+	return c
+}
+
 func (c *CMD) Run() error {
+	defer c.finish()
 	io.WriteString(c.cmd.Stdout, c.cmd.String()+"\n")
 	err := c.cmd.Start()
 	if err != nil {
@@ -92,4 +108,10 @@ func (c *CMD) Run() error {
 	}
 
 	return c.cmd.Wait()
+}
+
+func (c *CMD) finish() {
+	if c.cancelFunc != nil {
+		c.cancelFunc()
+	}
 }
