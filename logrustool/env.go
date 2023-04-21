@@ -9,6 +9,8 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
+var InitLevel = SetLevel
+
 func FormatOnlyMsg() {
 	logrus.SetFormatter(&onlyMsgFmt{})
 	//logrus.SetFormatter(&logrus.TextFormatter{})
@@ -39,23 +41,16 @@ func SetRotate(l *lumberjack.Logger) {
 	logrus.SetOutput(multiWriter)
 }
 
-func SetLevel(l logrus.Level) {
+func SetLevel(l ...logrus.Level) {
 	l1 := os.Getenv("LOGRUS_LEVEL")
 	v, err := logrus.ParseLevel(l1)
 	if err == nil {
 		logrus.SetLevel(v)
+		return
 	}
-	logrus.SetLevel(l)
-}
-
-// Deprecated use SetLevel instead
-func InitLevel(l logrus.Level) {
-	l1 := os.Getenv("LOGRUS_LEVEL")
-	v, err := logrus.ParseLevel(l1)
-	if err == nil {
-		logrus.SetLevel(v)
+	if len(l) > 0 {
+		logrus.SetLevel(l[0])
 	}
-	logrus.SetLevel(l)
 }
 
 // Deprecated use SetLevel instead
