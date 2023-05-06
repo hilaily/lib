@@ -11,8 +11,8 @@ import (
 	"github.com/pkg/sftp"
 )
 
-// RunResut ...
-func (c *Client) RunResut(script string) (string, error) {
+// RunResult ...
+func (c *Client) RunResult(script string) (string, error) {
 	session, err := c.client.NewSession()
 	if err != nil {
 		return "", fmt.Errorf("create new session error: %w", err)
@@ -73,8 +73,6 @@ func copyAllFiles(c *sftp.Client, src, dst string, force bool) error {
 	})
 
 }
-
-type WriteType string
 
 func copySingleFile(c *sftp.Client, src, dst string, force bool) error {
 	srcInfo, err := os.Stat(src)
