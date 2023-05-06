@@ -128,30 +128,6 @@ func (c *Client) newClient() (*ssh.Client, error) {
 }
 
 func signerFromPem(pemBytes []byte, password []byte) (ssh.Signer, error) {
-	/*
-		// handle encrypted key
-		if x509.IsEncryptedPEMBlock(pemBlock) {
-			// decrypt PEM
-			pemBlock.Bytes, err = x509.DecryptPEMBlock(pemBlock, []byte(password))
-			if err != nil {
-				return nil, fmt.Errorf("pecrypting PEM block failed %w", err)
-			}
-
-			// get RSA, EC or DSA key
-			key, err := parsePemBlock(pemBlock)
-			if err != nil {
-				return nil, err
-			}
-
-			// generate signer instance from key
-			signer, err := ssh.NewSignerFromKey(key)
-			if err != nil {
-				return nil, fmt.Errorf("preating signer from encrypted key failed %w", err)
-			}
-
-			return signer, nil
-		}
-	*/
 	var signer ssh.Signer
 	var err error
 
@@ -166,30 +142,3 @@ func signerFromPem(pemBytes []byte, password []byte) (ssh.Signer, error) {
 	}
 	return signer, nil
 }
-
-/*
-func parsePemBlock(block *pem.Block) (interface{}, error) {
-	switch block.Type {
-	case "RSA PRIVATE KEY":
-		key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-		if err != nil {
-			return nil, fmt.Errorf("parsing PKCS private key failed %w", err)
-		}
-		return key, nil
-	case "EC PRIVATE KEY":
-		key, err := x509.ParseECPrivateKey(block.Bytes)
-		if err != nil {
-			return nil, fmt.Errorf("parsing EC private key failed %w", err)
-		}
-		return key, nil
-	case "DSA PRIVATE KEY":
-		key, err := ssh.ParseDSAPrivateKey(block.Bytes)
-		if err != nil {
-			return nil, fmt.Errorf("parsing DSA private key failed %w", err)
-		}
-		return key, nil
-	default:
-		return nil, fmt.Errorf("parsing private key failed, unsupported key type %q", block.Type)
-	}
-}
-*/
