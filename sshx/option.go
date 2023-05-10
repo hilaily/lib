@@ -44,7 +44,7 @@ func WithJumpProxy(host, pass, keyPath string, ops ...Option) Option {
 		if err != nil {
 			return err
 		}
-		c.jumpClient = j.client
+		c.jumpClient = j
 		return nil
 	}
 }

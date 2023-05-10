@@ -18,7 +18,7 @@ type Client struct {
 	keyPath      string
 	keyPass      string
 	clientConfig *ssh.ClientConfig
-	jumpClient   *ssh.Client
+	jumpClient   *Client
 
 	client *ssh.Client
 }
@@ -72,14 +72,14 @@ func (c *Client) genConfig() (*ssh.ClientConfig, error) {
 	if c.clientConfig != nil {
 		return c.clientConfig, nil
 	}
+	conf := &ssh.ClientConfig{
+		Timeout:         30 * time.Second,
+		User:            c.user,
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
 	if c.pass != "" {
-		return &ssh.ClientConfig{
-			User: c.user,
-			Auth: []ssh.AuthMethod{
-				ssh.Password(c.pass),
-			},
-			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		}, nil
+		conf.Auth = []ssh.AuthMethod{ssh.Password(c.pass)}
+		return conf, nil
 	}
 	keyPath, err := pathx.ExpandHome(c.keyPath)
 	if err != nil {
@@ -94,14 +94,8 @@ func (c *Client) genConfig() (*ssh.ClientConfig, error) {
 		return nil, fmt.Errorf("parse key fail, %s, %w", keyPath, err)
 	}
 
-	return &ssh.ClientConfig{
-		User: c.user,
-		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(signer),
-		},
-		Timeout:         30 * time.Second,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}, nil
+	conf.Auth = []ssh.AuthMethod{ssh.PublicKeys(signer)}
+	return conf, nil
 }
 
 func (c *Client) newClient() (*ssh.Client, error) {
@@ -109,7 +103,7 @@ func (c *Client) newClient() (*ssh.Client, error) {
 	if c.jumpClient != nil {
 		// connect with the jump host
 		// Dial a connection to the service host, from the bastion
-		conn, err := c.jumpClient.Dial("tcp", addr)
+		conn, err := c.jumpClient.client.Dial("tcp", addr)
 		if err != nil {
 			return nil, fmt.Errorf("jump server connect to dest server fail, %s, %w", addr, err)
 		}

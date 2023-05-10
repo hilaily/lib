@@ -17,6 +17,15 @@ var (
 	dstPass = ""
 )
 
+func TestInteract(t *testing.T) {
+	c, err := New(proxyHost, "", proxyKey)
+	assert.NoError(t, err)
+
+	err = c.Interact()
+	t.Logf("err: %v", err)
+	assert.NoError(t, err)
+}
+
 func TestNewClient(t *testing.T) {
 	// direct
 	c, err := New(proxyHost, "", proxyKey)
@@ -36,7 +45,7 @@ func TestNewClient(t *testing.T) {
 }
 
 func check(t *testing.T, c *Client) {
-	res, err := c.RunResut("ls")
+	res, err := c.RunResult("ls")
 	assert.NoError(t, err)
 	assert.NotEmpty(t, res)
 	t.Log(string(res))
