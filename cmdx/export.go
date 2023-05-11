@@ -19,8 +19,8 @@ func Set(s ISet) {
 	std = s
 }
 
-func CheckErr(err error) {
-	std.CheckErr(err)
+func CheckErr(err error, msg ...string) {
+	std.CheckErr(err, msg...)
 }
 
 func Throw(format string, a ...any) {
