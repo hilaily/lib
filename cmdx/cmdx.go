@@ -11,27 +11,32 @@ import (
 	"time"
 )
 
+// ToCommand transfer a string to command object
 func ToCommand(cmd string) *exec.Cmd {
 	cmds := strings.Fields(cmd)
 	c := exec.Command(cmds[0], cmds[1:]...)
 	return c
 }
 
+// Run ...
 func Run(format string, a ...any) error {
 	return New(format, a...).Run()
 }
 
+// MustRun ...
 func MustRun(format string, a ...any) {
 	err := Run(format, a...)
 	std.CheckErr(err)
 }
 
+// MustSHRun ...
 func MustSHRun(format string, a ...any) {
 	c := exec.Command("sh", "-c", fmt.Sprintf(format, a...))
 	err := New2(c).Run()
 	std.CheckErr(err)
 }
 
+// RunCombinedOutput ...
 func RunCombinedOutput(cmd string, envs []string) (string, error) {
 	var b bytes.Buffer
 	err := New(cmd).Env(envs...).Output(&b, &b).Run()
@@ -43,11 +48,13 @@ func RunCombinedOutput(cmd string, envs []string) (string, error) {
 	return r, nil
 }
 
+// New ...
 func New(format string, a ...any) *CMD {
 	c := ToCommand(fmt.Sprintf(format, a...))
 	return New2(c)
 }
 
+// New2 ...
 func New2(cmd *exec.Cmd) *CMD {
 	c := &CMD{}
 	c.cmd = cmd
@@ -57,11 +64,13 @@ func New2(cmd *exec.Cmd) *CMD {
 	return c
 }
 
+// CMD wrap origin cmd structure
 type CMD struct {
 	cmd        *exec.Cmd
 	cancelFunc context.CancelFunc
 }
 
+// Env set environment variables
 func (c *CMD) Env(envs ...string) *CMD {
 	e := os.Environ()
 	if len(envs) > 0 {
@@ -71,16 +80,19 @@ func (c *CMD) Env(envs ...string) *CMD {
 	return c
 }
 
+// Dir set command workdir
 func (c *CMD) Dir(dir string) *CMD {
 	c.cmd.Dir = dir
 	return c
 }
 
+// Input ...
 func (c *CMD) Input(in io.Reader) *CMD {
 	c.cmd.Stdin = in
 	return c
 }
 
+// Output ...
 func (c *CMD) Output(output, errput io.Writer) *CMD {
 	if output != nil {
 		c.cmd.Stdout = output
@@ -91,6 +103,7 @@ func (c *CMD) Output(output, errput io.Writer) *CMD {
 	return c
 }
 
+// Timeout ...
 func (c *CMD) Timeout(t time.Duration) *CMD {
 	ctx, cancel := context.WithTimeout(context.Background(), t)
 	newCMD := exec.CommandContext(ctx, c.cmd.Path, c.cmd.Args...)
@@ -99,10 +112,14 @@ func (c *CMD) Timeout(t time.Duration) *CMD {
 	return c
 }
 
+// Run ...
 func (c *CMD) Run() error {
 	defer c.finish()
-	io.WriteString(c.cmd.Stdout, c.cmd.String()+"\n")
-	err := c.cmd.Start()
+	_, err := io.WriteString(c.cmd.Stdout, c.cmd.String()+"\n")
+	if err != nil {
+		return err
+	}
+	err = c.cmd.Start()
 	if err != nil {
 		return err
 	}
