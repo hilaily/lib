@@ -2,16 +2,31 @@ package cmdx
 
 import (
 	"os"
-
-	"github.com/urfave/cli/v2"
 )
 
-func WrapApp(app *cli.App) {
+type ICli interface {
+	Run(arguments []string) (err error) // for urfave/cli
+}
+
+type ICobra interface {
+	Execute() error
+}
+
+func WrapCli(cli ICli) {
 	defer func() {
 		std.Recover(recover())
 	}()
 
-	err := app.Run(os.Args)
+	err := cli.Run(os.Args)
+	std.CheckErr(err)
+}
+
+func WrapCobra(cobra ICobra) {
+	defer func() {
+		std.Recover(recover())
+	}()
+
+	err := cobra.Execute()
 	std.CheckErr(err)
 }
 

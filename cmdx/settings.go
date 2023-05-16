@@ -38,7 +38,7 @@ type DefaultSet struct {
 func (d *DefaultSet) CheckErr(err error, msg ...string) {
 	if err != nil {
 		if len(msg) > 0 {
-			panic(fmt.Errorf("%s %w", msg[0], err))
+			panic(&Err{error: fmt.Errorf("%s %w", msg[0], err)})
 		}
 		panic(err)
 	}
@@ -51,13 +51,15 @@ func (d *DefaultSet) Throw(format string, a ...any) {
 
 // Recover ...
 func (d *DefaultSet) Recover(r interface{}) {
-	if r != nil {
-		if t, ok := r.(*Err); ok {
-			d.Red("%v", t.Error())
-			return
-		}
-		panic(r)
+	if r == nil {
+		return
 	}
+	e, ok := r.(*Err)
+	if ok {
+		d.Red("%v", e.Error())
+		return
+	}
+	panic(r)
 }
 
 // DefaultPrint ...
