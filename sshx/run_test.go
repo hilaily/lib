@@ -17,6 +17,32 @@ var (
 	dstPass = ""
 )
 
+func TestRawSCP(t *testing.T) {
+	c, err := New(proxyHost, "", proxyKey)
+	assert.NoError(t, err)
+
+	err = c.RawSCP("/tmp/flower", "/tmp/")
+	assert.NoError(t, err)
+
+	c, err = New(dstHost, dstPass, "", WithJumpProxy(proxyHost, "", proxyKey))
+	assert.NoError(t, err)
+	err = c.RawSCP("/tmp/flower", "/tmp/")
+	assert.NoError(t, err)
+}
+
+func TestRawInteract(t *testing.T) {
+	c, err := New(proxyHost, "", proxyKey)
+	assert.NoError(t, err)
+
+	err = c.RawInteract()
+	assert.NoError(t, err)
+
+	c, err = New(dstHost, dstPass, "", WithJumpProxy(proxyHost, "", proxyKey))
+	assert.NoError(t, err)
+	err = c.RawInteract()
+	assert.NoError(t, err)
+}
+
 func TestInteract(t *testing.T) {
 	c, err := New(proxyHost, "", proxyKey)
 	assert.NoError(t, err)

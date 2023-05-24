@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/hilaily/kit/helper"
+	"github.com/hilaily/kit/stringx"
+	"github.com/hilaily/lib/cmdx"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
@@ -114,16 +117,58 @@ func copySingleFile(c *sftp.Client, src, dst string, force bool) error {
 	return dstFile.Chmod(srcInfo.Mode())
 }
 
-/*
 // RawInteract interact with ssh command
 func (c *Client) RawInteract() error {
-	args := c.sshString()
-	if c.pass != "" {
-		return cmdx.Run("sshpass -p %s %s", c.pass, args)
+	args := map[string]any{
+		"user":    c.user,
+		"keyPath": c.keyPath,
+		"host":    c.host,
+		"port":    c.port,
 	}
-	return cmdx.Run(args)
+	content := "{{.user}}@{{.host}} -p {{.port}}"
+	if c.keyPath != "" {
+		content = "{{.user}}@{{.host}} -p {{.port}} -i {{.keyPath}}"
+	}
+	if c.jumpClient != nil {
+		if c.jumpClient.keyPath == "" {
+			return fmt.Errorf("not support jump server without public key")
+		}
+		content = content + ` -oProxyCommand="ssh {{.proxyUser}}@{{.proxyHost}} -p {{.proxyPort}} -i {{.proxyKeyPath}} -W {{.host}}:{{.port}}"`
+		args["proxyUser"] = c.jumpClient.user
+		args["proxyKeyPath"] = c.jumpClient.keyPath
+		args["proxyHost"] = c.jumpClient.host
+		args["proxyPort"] = c.jumpClient.port
+	}
+	e := exec.Command("bash", "-c", "ssh "+stringx.Format(content, args))
+	return cmdx.New2(e).Run()
 }
-*/
+
+func (c *Client) RawSCP(src, dst string) error {
+	args := map[string]any{
+		"user":    c.user,
+		"keyPath": c.keyPath,
+		"host":    c.host,
+		"port":    c.port,
+		"src":     src,
+		"dst":     dst,
+	}
+	content := `-P {{.port}} {{.src}} {{.user}}@{{.host}}:{{.dst}}`
+	if c.keyPath != "" {
+		content = `-P {{.port}} -i {{.keyPath}} {{.src}} {{.user}}@{{.host}}:{{.dst}}`
+	}
+	if c.jumpClient != nil {
+		if c.jumpClient.keyPath == "" {
+			return fmt.Errorf("not support jump server without public key")
+		}
+		content = `-oProxyCommand="ssh {{.proxyUser}}@{{.proxyHost}} -p {{.proxyPort}} -i {{.proxyKeyPath}} -W %h:%p" ` + content
+		args["proxyUser"] = c.jumpClient.user
+		args["proxyKeyPath"] = c.jumpClient.keyPath
+		args["proxyHost"] = c.jumpClient.host
+		args["proxyPort"] = c.jumpClient.port
+	}
+	e := exec.Command("bash", "-c", "scp "+stringx.Format(content, args))
+	return cmdx.New2(e).Run()
+}
 
 // Interact ...
 func (c *Client) Interact() error {
@@ -156,13 +201,6 @@ func (c *Client) in() error {
 	session.Stdout = os.Stdout
 	session.Stderr = os.Stderr
 
-	/*
-		err = copyData(session)
-		if err != nil {
-			return err
-		}
-	*/
-
 	if err = session.Shell(); err != nil {
 		return fmt.Errorf("start shell error: %w", err)
 	}
@@ -171,26 +209,6 @@ func (c *Client) in() error {
 	}
 	return nil
 }
-
-/*
-func (c *Client) sshString() string {
-	var proxy string
-	if c.jumpClient != nil {
-		proxy = c.jumpClient.sshString()
-		proxy = strings.ReplaceAll(proxy, "ssh ", "")
-	}
-	buf := &bytes.Buffer{}
-	_, _ = buf.WriteString("ssh ")
-	if proxy != "" {
-		_, _ = buf.WriteString(fmt.Sprintf("-oProxyCommand='sshpass -p gatewaypassword ssh -W %h%p uname@gatwayserver'" + proxy + " ")
-	}
-	_, _ = buf.WriteString(fmt.Sprintf("%s@%s:%d ", c.user, c.host, c.port))
-	if c.keyPath != "" {
-		_, _ = buf.WriteString("-i " + c.keyPath + " ")
-	}
-	return buf.String()
-}
-*/
 
 func copyData(session *ssh.Session) error {
 	stdin, err := session.StdinPipe()
