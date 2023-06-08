@@ -40,7 +40,7 @@ func (d *DefaultSet) CheckErr(err error, msg ...string) {
 		if len(msg) > 0 {
 			panic(&Err{error: fmt.Errorf("%s %w", msg[0], err)})
 		}
-		panic(err)
+		panic(&Err{error: err})
 	}
 }
 
