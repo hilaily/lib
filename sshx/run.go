@@ -170,6 +170,35 @@ func (c *Client) RawSCP(src, dst string) error {
 	return cmdx.New2(e).Run()
 }
 
+// RawRsync ...
+// rsync -azv -e 'ssh -o "ProxyCommand ssh -A PROXYHOST -W %h:%p"' foo/ dest:./foo/
+func (c *Client) RawRsync(src, dst string) error {
+	args := map[string]any{
+		"user":    c.user,
+		"keyPath": c.keyPath,
+		"host":    c.host,
+		"port":    c.port,
+		"src":     src,
+		"dst":     dst,
+	}
+	content := `-p {{.port}}' {{.src}} {{.user}}@{{.host}}:{{.dst}}`
+	if c.keyPath != "" {
+		content = `-p {{.port}} -i {{.keyPath}}' {{.src}} {{.user}}@{{.host}}:{{.dst}}`
+	}
+	if c.jumpClient != nil {
+		if c.jumpClient.keyPath == "" {
+			return fmt.Errorf("not support jump server without public key")
+		}
+		content = `-o "ProxyCommand ssh -A {{.proxyUser}}@{{.proxyHost}} -p {{.proxyPort}} -i {{.proxyKeyPath}} -W %h:%p" ` + content
+		args["proxyUser"] = c.jumpClient.user
+		args["proxyKeyPath"] = c.jumpClient.keyPath
+		args["proxyHost"] = c.jumpClient.host
+		args["proxyPort"] = c.jumpClient.port
+	}
+	e := exec.Command("bash", "-c", "rsync -a -e ' ssh "+stringx.Format(content, args))
+	return cmdx.New2(e).Run()
+}
+
 // Interact ...
 func (c *Client) Interact() error {
 	return c.in()

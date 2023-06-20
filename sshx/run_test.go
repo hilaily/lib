@@ -17,6 +17,33 @@ var (
 	dstPass = ""
 )
 
+func createFile(t *testing.T, filename string) {
+	err := os.WriteFile(filename, []byte("test copy 1"), 0777)
+	assert.NoError(t, err)
+}
+
+func removeFile(filename string) {
+	os.RemoveAll(filename)
+}
+
+func TestRawRsync(t *testing.T) {
+	f := "/tmp/test-rsync.txt"
+	createFile(t, f)
+	defer func() {
+		removeFile(f)
+	}()
+	c, err := New(proxyHost, "", proxyKey)
+	assert.NoError(t, err)
+
+	err = c.RawRsync(f, "/tmp/")
+	assert.NoError(t, err)
+
+	c, err = New(dstHost, dstPass, "", WithJumpProxy(proxyHost, "", proxyKey))
+	assert.NoError(t, err)
+	err = c.RawRsync(f, "/tmp/")
+	assert.NoError(t, err)
+}
+
 func TestRawSCP(t *testing.T) {
 	c, err := New(proxyHost, "", proxyKey)
 	assert.NoError(t, err)
