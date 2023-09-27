@@ -1,6 +1,10 @@
 package sshx
 
-import "golang.org/x/crypto/ssh"
+import (
+	"fmt"
+
+	"golang.org/x/crypto/ssh"
+)
 
 type Option = func(*Client) error
 
@@ -42,7 +46,7 @@ func WithJumpProxy(host, pass, keyPath string, ops ...Option) Option {
 	return func(c *Client) error {
 		j, err := New(host, pass, keyPath, ops...)
 		if err != nil {
-			return err
+			return fmt.Errorf("init jump proxy fail %w", err)
 		}
 		c.jumpClient = j
 		return nil
