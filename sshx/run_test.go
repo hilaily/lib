@@ -17,6 +17,13 @@ var (
 	dstPass = ""
 )
 
+func TestNewClient1(t *testing.T) {
+	// direct
+	c, err := New("222.73.30.11", "", "~/.ssh/newCICDIdentity", WithPort(59224), WithKeyPass(""))
+	assert.NoError(t, err)
+	check(t, c)
+}
+
 func createFile(t *testing.T, filename string) {
 	err := os.WriteFile(filename, []byte("test copy 1"), 0777)
 	assert.NoError(t, err)

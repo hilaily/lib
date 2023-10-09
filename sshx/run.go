@@ -119,6 +119,10 @@ func copySingleFile(c *sftp.Client, src, dst string, force bool) error {
 
 // RawInteract interact with ssh command
 func (c *Client) RawInteract() error {
+	err := c.CopyID()
+	if err != nil {
+		return err
+	}
 	args := map[string]any{
 		"user":    c.user,
 		"keyPath": c.keyPath,
@@ -144,6 +148,10 @@ func (c *Client) RawInteract() error {
 }
 
 func (c *Client) RawSCP(src, dst string) error {
+	err := c.CopyID()
+	if err != nil {
+		return err
+	}
 	args := map[string]any{
 		"user":    c.user,
 		"keyPath": c.keyPath,
@@ -173,6 +181,10 @@ func (c *Client) RawSCP(src, dst string) error {
 // RawRsync ...
 // rsync -azv -e 'ssh -o "ProxyCommand ssh -A PROXYHOST -W %h:%p"' foo/ dest:./foo/
 func (c *Client) RawRsync(src, dst string) error {
+	err := c.CopyID()
+	if err != nil {
+		return err
+	}
 	args := map[string]any{
 		"user":    c.user,
 		"keyPath": c.keyPath,
