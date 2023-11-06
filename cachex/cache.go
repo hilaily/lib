@@ -21,6 +21,10 @@ type ICache[T any] interface {
 	Set(*T) error
 	Get() (*T, error)
 	Update(func(*T)) error
+
+	MustSet(*T)
+	MustGet() *T
+	MustUpdate(func(*T))
 }
 
 // New ...
@@ -42,6 +46,28 @@ type _cacheSrv[T any] struct {
 	lockFile string
 	file     string
 	dir      string
+}
+
+func (rc *_cacheSrv[T]) MustSet(data *T) {
+	err := rc.Set(data)
+	if err != nil {
+		logrus.Panicf(err.Error())
+	}
+}
+
+func (rc *_cacheSrv[T]) MustGet() *T {
+	r, err := rc.Get()
+	if err != nil {
+		logrus.Panicf(err.Error())
+	}
+	return r
+}
+
+func (rc *_cacheSrv[T]) MustUpdate(f func(*T)) {
+	err := rc.Update(f)
+	if err != nil {
+		logrus.Panicf(err.Error())
+	}
 }
 
 // Set ...
