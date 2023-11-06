@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"time"
 
 	"github.com/hilaily/kit/pathx"
@@ -35,6 +36,9 @@ func New[T any](_filepath string) (*_cacheSrv[T], error) {
 		dir:      filepath.Dir(_filepath),
 	}
 	var t T
+	if reflect.TypeOf(t).Kind() == reflect.Ptr {
+		return nil, fmt.Errorf("please use struct directly, don't use pointer")
+	}
 	if !pathx.IsExist(_filepath) {
 		err := c.Set(&t)
 		return c, err
