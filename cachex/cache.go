@@ -13,11 +13,11 @@ import (
 )
 
 var (
-	_ IStore[string] = &_cacheSrv[string]{}
+	_ ICache[string] = &_cacheSrv[string]{}
 )
 
 // IStore ...
-type IStore[T any] interface {
+type ICache[T any] interface {
 	Set(*T) error
 	Get() (*T, error)
 	Update(func(*T)) error
