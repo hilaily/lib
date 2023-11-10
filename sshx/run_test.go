@@ -17,9 +17,19 @@ var (
 	dstPass = ""
 )
 
+func init() {
+	proxyHost = os.Getenv("JUMP_HOST")
+	proxyKey = os.Getenv("JUMP_KEY")
+	proxyKey2 = "~/.ssh/id_pfs2"
+	proxyKeyPass = "123123"
+
+	dstHost = os.Getenv("DEST_HOST")
+	dstPass = os.Getenv("DEST_PASS")
+}
+
 func TestNewClient1(t *testing.T) {
 	// direct
-	c, err := New("222.73.30.11", "", "~/.ssh/newCICDIdentity", WithPort(59224), WithKeyPass(""))
+	c, err := New(dstHost, dstPass, "", WithPort(59224), WithKeyPass(""))
 	assert.NoError(t, err)
 	check(t, c)
 }

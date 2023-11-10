@@ -49,5 +49,6 @@ func generateWritePublicKeyCmd(key string) (string, error) {
 	}
 
 	keyStr := strings.TrimSuffix(string(data), "\n")
-	return fmt.Sprintf("grep -q \"%s\" .ssh/authorized_keys || echo \"%s\" | tee -a .ssh/authorized_keys", keyStr, keyStr), nil
+	return fmt.Sprintf("mkdir -p ~/.ssh && touch ~/.ssh/authorized_keys && grep -q \"%s\" ~/.ssh/authorized_keys || echo \"%s\" | tee -a ~/.ssh/authorized_keys", keyStr, keyStr), nil
+
 }
