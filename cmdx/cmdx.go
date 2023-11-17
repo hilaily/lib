@@ -29,10 +29,15 @@ func MustRun(format string, a ...any) {
 	std.CheckErr(err)
 }
 
-// MustSHRun ...
-func MustSHRun(format string, a ...any) {
+func SHRun(format string, a ...any) error {
 	c := exec.Command("sh", "-c", fmt.Sprintf(format, a...))
 	err := New2(c).Run()
+	return err
+}
+
+// MustSHRun ...
+func MustSHRun(format string, a ...any) {
+	err := SHRun(format, a...)
 	std.CheckErr(err)
 }
 
