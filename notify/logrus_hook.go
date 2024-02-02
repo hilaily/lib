@@ -10,6 +10,12 @@ import (
 func NewHookByENV() (*ErrorHook, error) {
 	projectName := os.Getenv("NOTI_NAME")
 	webhook := os.Getenv("NOTI_LARK_WEBHOOK")
+	if projectName == "" {
+		projectName = "lark alert"
+	}
+	if webhook == "" {
+		logrus.Panicf("[notify], webhook is empty")
+	}
 	return NewHook(projectName, webhook)
 }
 
