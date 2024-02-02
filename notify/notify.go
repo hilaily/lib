@@ -6,7 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func init() {
+func Init() {
 	// 设置日志格式
 	formatter := &log.TextFormatter{
 		FullTimestamp: true,
