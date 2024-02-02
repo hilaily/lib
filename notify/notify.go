@@ -1,6 +1,6 @@
 // 通知发送
 // 目前支持邮件和 alertover
-package notifier
+package notify
 
 import (
 	log "github.com/sirupsen/logrus"
