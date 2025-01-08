@@ -17,5 +17,4 @@ func HandleWs(c *gin.Context) {
 	)
 	wsHandler.HandleConnection(c)
 }
-
 ```
