@@ -29,28 +29,21 @@ type WSHandler struct {
 }
 
 // NewWSHandler 创建一个新的 WebSocket 处理器
-func NewHandler() *WSHandler {
+// errorHandler is to process error, it can be nil, there is a default error handler
+func NewHandler(handler func(conn *websocket.Conn, payload []byte) error, errorHandler func(conn *websocket.Conn, err error)) *WSHandler {
 	return &WSHandler{
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true // 允许所有来源，生产环境中应该更严格
 			},
 		},
+		handler:      handler,
+		errorHandler: errorHandler,
 	}
 }
 
-// RegisterHandler 注册消息处理器
-func (h *WSHandler) RegisterHandler(handler func(conn *websocket.Conn, payload []byte) error) {
-	h.handler = handler
-}
-
-// RegisterErrorHandler 注册错误处理器
-func (h *WSHandler) RegisterErrorHandler(handler func(conn *websocket.Conn, err error)) {
-	h.errorHandler = handler
-}
-
 // HandleConnection 处理 WebSocket 连接
-func (h *WSHandler) handleConnection(c *gin.Context) {
+func (h *WSHandler) HandleConnection(c *gin.Context) {
 	conn, err := h.upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to upgrade connection")
@@ -96,17 +89,6 @@ func (h *WSHandler) handleConnection(c *gin.Context) {
 	}
 }
 
-// SendError 发送错误响应
-func (h *WSHandler) sendError(conn *websocket.Conn, err error) {
-	if h.errorHandler != nil {
-		h.errorHandler(conn, err)
-		return
-	}
-	if err := conn.WriteJSON(map[string]string{"error": err.Error()}); err != nil {
-		logrus.WithError(err).Error("Failed to send error response")
-	}
-}
-
 // Broadcast 向所有连接广播消息
 func (h *WSHandler) Broadcast(message interface{}) {
 	h.connections.Range(func(key, value interface{}) bool {
@@ -116,6 +98,17 @@ func (h *WSHandler) Broadcast(message interface{}) {
 		}
 		return true
 	})
+}
+
+// SendError 发送错误响应
+func (h *WSHandler) sendError(conn *websocket.Conn, err error) {
+	if h.errorHandler != nil {
+		h.errorHandler(conn, err)
+		return
+	}
+	if err := conn.WriteJSON(map[string]string{"error": err.Error()}); err != nil {
+		logrus.WithError(err).Error("[ws] Failed to send error response")
+	}
 }
 
 func (h *WSHandler) generateConnID() string {
