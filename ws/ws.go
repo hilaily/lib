@@ -20,19 +20,19 @@ var (
 
 // WSHandler 是一个通用的 WebSocket 处理器
 // receiveData is the data type of the message received, it should not be a pointer
-type WSHandler[receiveData any] struct {
+type WSHandler[recvData any] struct {
 	upgrader websocket.Upgrader
 	// 存储所有活跃的连接
 	connections sync.Map
 	// 消息处理器映射
-	handler      func(conn *websocket.Conn, data receiveData) error
+	handler      func(conn *websocket.Conn, data recvData) error
 	errorHandler func(conn *websocket.Conn, err error)
 }
 
 // NewWSHandler 创建一个新的 WebSocket 处理器
 // errorHandler is to process error, it can be nil, there is a default error handler
-func NewHandler[receiveData any](handler func(conn *websocket.Conn, data receiveData) error, errorHandler func(conn *websocket.Conn, err error)) *WSHandler[receiveData] {
-	return &WSHandler[receiveData]{
+func NewHandler[recvData any](handler func(conn *websocket.Conn, data recvData) error, errorHandler func(conn *websocket.Conn, err error)) *WSHandler[recvData] {
+	return &WSHandler[recvData]{
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true // 允许所有来源，生产环境中应该更严格
@@ -44,7 +44,7 @@ func NewHandler[receiveData any](handler func(conn *websocket.Conn, data receive
 }
 
 // HandleConnection 处理 WebSocket 连接
-func (h *WSHandler[receiveData]) HandleConnection(c *gin.Context) {
+func (h *WSHandler[recvData]) HandleConnection(c *gin.Context) {
 	conn, err := h.upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to upgrade connection")
@@ -61,7 +61,7 @@ func (h *WSHandler[receiveData]) HandleConnection(c *gin.Context) {
 	}()
 
 	for {
-		var message receiveData
+		var message recvData
 		err := conn.ReadJSON(&message)
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
@@ -84,7 +84,7 @@ func (h *WSHandler[receiveData]) HandleConnection(c *gin.Context) {
 }
 
 // Broadcast 向所有连接广播消息
-func (h *WSHandler[receiveData]) Broadcast(message receiveData) {
+func (h *WSHandler[recvData]) Broadcast(message recvData) {
 	h.connections.Range(func(key, value interface{}) bool {
 		conn := value.(*websocket.Conn)
 		if err := conn.WriteJSON(message); err != nil {
@@ -95,7 +95,7 @@ func (h *WSHandler[receiveData]) Broadcast(message receiveData) {
 }
 
 // SendError 发送错误响应
-func (h *WSHandler[receiveData]) sendError(conn *websocket.Conn, err error) {
+func (h *WSHandler[recvData]) sendError(conn *websocket.Conn, err error) {
 	if h.errorHandler != nil {
 		h.errorHandler(conn, err)
 		return
@@ -105,7 +105,7 @@ func (h *WSHandler[receiveData]) sendError(conn *websocket.Conn, err error) {
 	}
 }
 
-func (h *WSHandler[receiveData]) generateConnID() string {
+func (h *WSHandler[recvData]) generateConnID() string {
 	// generateConnID 生成唯一的连接 ID
 	return "conn_" + time.Now().Format("20060102150405.000") + strconv.Itoa(rand.Intn(100000000))
 }
