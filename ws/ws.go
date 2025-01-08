@@ -29,7 +29,7 @@ type WSHandler struct {
 }
 
 // NewWSHandler 创建一个新的 WebSocket 处理器
-func NewWSHandler() *WSHandler {
+func NewHandler() *WSHandler {
 	return &WSHandler{
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
@@ -44,12 +44,13 @@ func (h *WSHandler) RegisterHandler(handler func(conn *websocket.Conn, payload [
 	h.handler = handler
 }
 
+// RegisterErrorHandler 注册错误处理器
 func (h *WSHandler) RegisterErrorHandler(handler func(conn *websocket.Conn, err error)) {
 	h.errorHandler = handler
 }
 
 // HandleConnection 处理 WebSocket 连接
-func (h *WSHandler) HandleConnection(c *gin.Context) {
+func (h *WSHandler) handleConnection(c *gin.Context) {
 	conn, err := h.upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to upgrade connection")
@@ -96,7 +97,7 @@ func (h *WSHandler) HandleConnection(c *gin.Context) {
 }
 
 // SendError 发送错误响应
-func (h *WSHandler) SendError(conn *websocket.Conn, err error) {
+func (h *WSHandler) sendError(conn *websocket.Conn, err error) {
 	if h.errorHandler != nil {
 		h.errorHandler(conn, err)
 		return
@@ -111,7 +112,7 @@ func (h *WSHandler) Broadcast(message interface{}) {
 	h.connections.Range(func(key, value interface{}) bool {
 		conn := value.(*websocket.Conn)
 		if err := conn.WriteJSON(message); err != nil {
-			h.SendError(conn, err)
+			h.sendError(conn, err)
 		}
 		return true
 	})
