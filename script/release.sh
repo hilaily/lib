@@ -3,7 +3,7 @@
 dir=$1
 
 if [ "X$dir" == "X" ]; then
-	dir = $(pwd)
+	dir=$(pwd)
 fi
 
 cd $dir
