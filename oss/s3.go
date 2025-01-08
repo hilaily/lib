@@ -38,7 +38,7 @@ func NewS3Client(conf *S3Config) (*S3Client, error) {
 	accessKey := conf.AccessKey
 	secretKey := conf.SecretKey
 	region := conf.Region
-	logrus.Info("oss config", "endpoint", endpoint, "accessKey", accessKey, "secretKey", secretKey, "region", region)
+	logrus.Info("oss config", "endpoint", endpoint, "accessKey", accessKey, "secretKey(len)", len(secretKey), "region", region)
 
 	// 加载 AWS 配置，包括凭证和自定义端点
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
