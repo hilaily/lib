@@ -64,14 +64,13 @@ func (h *WSHandler[recvData]) HandleConnection(c *gin.Context) {
 		var message recvData
 		err := conn.ReadJSON(&message)
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				logrus.WithError(err).Error("WebSocket read error")
-			}
+			logrus.WithError(err).Error("Failed to unmarshal message")
 			if h.errorHandler != nil {
 				h.errorHandler(conn, err)
 			}
 			return
 		}
+		logrus.WithField("message", message).Debug("Received message")
 		if h.handler != nil {
 			if err := h.handler(conn, message); err != nil {
 				logrus.WithError(err).Error("Handler error")
