@@ -6,13 +6,22 @@ import (
 	"path/filepath"
 
 	"github.com/joho/godotenv"
+	"github.com/sirupsen/logrus"
 )
+
+func MustLoadEnv(name string) {
+	err := LoadEnv(name)
+	if err != nil {
+		panic(err)
+	}
+}
 
 func LoadEnv(name string) error {
 	dir, err := os.Getwd() // 获取当前工作目录
 	if err != nil {
 		return err
 	}
+	logrus.Debugf("Loading env file from %s", dir)
 
 	for {
 		envPath := filepath.Join(dir, name)
