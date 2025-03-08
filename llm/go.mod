@@ -4,6 +4,7 @@ go 1.23.2
 
 require (
 	github.com/flosch/pongo2/v6 v6.0.0
+	github.com/hilaily/kit v0.7.14
 	github.com/hilaily/lib/env v0.0.1
 	github.com/openai/openai-go v0.1.0-alpha.56
 	github.com/sashabaranov/go-openai v1.37.0
@@ -21,4 +22,5 @@ require (
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
 	golang.org/x/sys v0.22.0 // indirect
+	golang.org/x/text v0.16.0 // indirect
 )
