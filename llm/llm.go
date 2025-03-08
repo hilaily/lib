@@ -5,8 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
+	"time"
 
 	"github.com/flosch/pongo2/v6"
+	"github.com/hilaily/kit/stringx"
 	"github.com/openai/openai-go"
 	openai2 "github.com/sashabaranov/go-openai"
 	"github.com/sirupsen/logrus"
@@ -71,6 +74,9 @@ func NewClient(opts ...ClientOption) *Client {
 	}
 	c := openai2.DefaultConfig(conf.apiKey)
 	c.BaseURL = conf.baseURL
+	if !strings.HasSuffix(conf.baseURL, "/v1") {
+		c.BaseURL = stringx.URLJoin(conf.baseURL, "/v1")
+	}
 	client := openai2.NewClientWithConfig(c)
 	return &Client{client: client, opts: conf}
 }
@@ -88,7 +94,7 @@ func (c *Client) UpdateOption(opts ...ClientOption) *Client {
 	return &Client{client: c.client, opts: o}
 }
 
-func (c *Client) ChatTextOnce(ctx context.Context, msg string) (<-chan string, error) {
+func (c *Client) ChatTextOnce(ctx context.Context, msg string) (<-chan *ChatResult, error) {
 	msgs := []openai2.ChatCompletionMessage{
 		{
 			Role:    openai2.ChatMessageRoleUser,
@@ -99,14 +105,26 @@ func (c *Client) ChatTextOnce(ctx context.Context, msg string) (<-chan string, e
 	if err != nil {
 		return nil, err
 	}
-	receiver := make(chan string, 10)
+	receiver := make(chan *ChatResult, 10)
 	go func() {
 		for choice := range rec {
-			receiver <- choice.Delta.Content
+			finishMsg := ""
+			if choice.FinishReason != openai2.FinishReasonStop && choice.FinishReason != openai2.FinishReasonLength {
+				finishMsg = string(choice.FinishReason)
+			}
+			receiver <- &ChatResult{
+				Text: choice.Delta.Content,
+				Err:  finishMsg,
+			}
 		}
 		close(receiver)
 	}()
 	return receiver, nil
+}
+
+type ChatResult struct {
+	Text string
+	Err  string
 }
 
 func (c *Client) ChatImageOnce(ctx context.Context, msg, imgURL string) (<-chan string, error) {
@@ -160,6 +178,7 @@ func (c *Client) ChatBase(ctx context.Context, msgs []openai2.ChatCompletionMess
 		Messages:  newMsgs,
 		Stream:    true,
 	}
+	start := time.Now()
 	stream, err := c.client.CreateChatCompletionStream(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("ChatCompletionStream error: %v\n", err)
@@ -170,6 +189,7 @@ func (c *Client) ChatBase(ctx context.Context, msgs []openai2.ChatCompletionMess
 		defer stream.Close()
 		for {
 			response, err := stream.Recv()
+			// logrus.Debugf("[llm] response: %+v, err: %v", response, err)
 			if err != nil {
 				if errors.Is(err, io.EOF) {
 					break
@@ -179,10 +199,14 @@ func (c *Client) ChatBase(ctx context.Context, msgs []openai2.ChatCompletionMess
 				}
 				break
 			}
-			// logrus.Debugf("response: %+v", response.Choices[0])
+			// ignore stop finish reason
+			if response.Choices[0].FinishReason == openai2.FinishReasonStop {
+				continue
+			}
 			receiver <- response.Choices[0]
 		}
 		close(receiver)
+		logrus.Debugf("[llm] ChatBase cost: %v", time.Since(start))
 	}()
 	return receiver, nil
 }
