@@ -12,17 +12,17 @@ type IManager interface {
 	GetProvider(name string) (*Client, bool)
 }
 
-type Manager struct {
+type manager struct {
 	providers map[string]string
 	clients   map[string]*Client
 }
 
-func (m *Manager) GetModel(name string) (*Client, bool) {
+func (m *manager) GetModel(name string) (*Client, bool) {
 	client, ok := m.clients[name]
 	return client, ok
 }
 
-func (m *Manager) GetProvider(name string) (*Client, bool) {
+func (m *manager) GetProvider(name string) (*Client, bool) {
 	provider, ok := m.providers[name]
 	if !ok {
 		return nil, false
@@ -44,7 +44,7 @@ type Conf struct {
 	} `yaml:"llm"`
 }
 
-func NewManager(conf string) (*Manager, error) {
+func NewManager(conf string) (*manager, error) {
 	confBytes, err := os.ReadFile(conf)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read llm config file: %w, conf: %s", err, conf)
@@ -52,7 +52,7 @@ func NewManager(conf string) (*Manager, error) {
 	return NewManagerFromData(confBytes)
 }
 
-func NewManagerFromData(confBytes []byte) (*Manager, error) {
+func NewManagerFromData(confBytes []byte) (*manager, error) {
 	cfg := &Conf{}
 	err := yaml.Unmarshal(confBytes, cfg)
 	if err != nil {
@@ -65,7 +65,7 @@ func NewManagerFromData(confBytes []byte) (*Manager, error) {
 	if len(clients) == 0 {
 		return nil, fmt.Errorf("no llm clients found, config string: %s, parsed config: %#+v", confBytes, cfg)
 	}
-	return &Manager{
+	return &manager{
 		providers: cfg.LLM.Providers,
 		clients:   clients,
 	}, nil
