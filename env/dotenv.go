@@ -9,14 +9,31 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func MustLoadEnv(name string) {
-	err := LoadEnv(name)
+func MustLoad(name string) {
+	err := load(name)
 	if err != nil {
 		panic(err)
 	}
 }
 
+func Load(name string) error {
+	return load(name)
+}
+
+// deprecated: use MustLoad instead
+func MustLoadEnv(name string) {
+	err := load(name)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// deprecated: use Load instead
 func LoadEnv(name string) error {
+	return load(name)
+}
+
+func load(name string) error {
 	dir, err := os.Getwd() // 获取当前工作目录
 	if err != nil {
 		return err
