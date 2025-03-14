@@ -8,17 +8,19 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hilaily/lib/env"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestOss(t *testing.T) {
+	env.MustLoad(".env.test")
 	conf := &S3Config{
-		Endpoint:   "",
-		AccessKey:  "",
-		SecretKey:  "",
-		Region:     "",
-		BucketName: "",
+		Endpoint:   os.Getenv("S3_ENDPOINT"),
+		AccessKey:  os.Getenv("S3_ACCESS_KEY"),
+		SecretKey:  os.Getenv("S3_SECRET_KEY"),
+		Region:     os.Getenv("S3_REGION"),
+		BucketName: os.Getenv("S3_BUCKET_NAME"),
 	}
 
 	client, err := NewS3Client(conf)
