@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,8 +15,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hilaily/lib/configx"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -40,19 +39,16 @@ type S3Config struct {
 	BucketName string
 }
 
-func NewS3ClientFromConfig(configFile string) (IS3, error) {
-	content, err := os.ReadFile(configFile)
-	if err != nil {
-		return nil, fmt.Errorf("无法读取配置文件: %w", err)
+func NewS3ClientFromConfig(conf configx.IConfig) (IS3, error) {
+	var config *S3Config
+	ok, err := conf.Get("s3", config)
+	if !ok {
+		return nil, fmt.Errorf("s3 config not found")
 	}
-	conf := struct {
-		S3 *S3Config `yaml:"s3"`
-	}{}
-	err = yaml.Unmarshal(content, &conf)
 	if err != nil {
-		return nil, fmt.Errorf("无法加载配置文件: %w", err)
+		return nil, fmt.Errorf("get s3 config failed: %w", err)
 	}
-	return NewS3Client(conf.S3)
+	return NewS3Client(config)
 }
 
 // NewS3Client 初始化并返回一个 S3Client 实例
