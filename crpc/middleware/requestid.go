@@ -19,7 +19,10 @@ func RequestIDMiddleware() connect.UnaryInterceptorFunc {
 			// 将请求 ID 添加到上下文
 			ctx = context.WithValue(ctx, logrustool.RequestIDKey, requestID)
 			res, err := next(ctx, req)
-			if res != nil {
+			if err != nil {
+				return nil, err
+			}
+			if res != nil && res.Header() != nil {
 				res.Header().Set(logrustool.RequestIDHeaderKey, requestID)
 			}
 			return res, err
