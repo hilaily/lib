@@ -8,8 +8,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var (
+	_ IConfig = &config{}
+)
+
 type IConfig interface {
-	Get(path string, ptr any) error
+	Get(path string, ptr any) (bool, error)
 	Unmarshal(ptr any) error
 }
 
@@ -42,12 +46,12 @@ type config struct {
 	nodeMap     map[string]*yaml.Node
 }
 
-func (c *config) Get(path string, ptr any) error {
+func (c *config) Get(path string, ptr any) (bool, error) {
 	nodes, ok := c.nodeMap[path]
 	if !ok {
-		return fmt.Errorf("path not found, path: %s", path)
+		return false, nil
 	}
-	return nodes.Decode(ptr)
+	return true, nodes.Decode(ptr)
 }
 
 func (c *config) Unmarshal(ptr any) error {
