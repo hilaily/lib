@@ -25,7 +25,7 @@ type DBConfig struct {
 	Database string
 }
 
-func New(conf configx.IConfig) (*_mysql, error) {
+func NewFromConfig(conf configx.IConfig) (*_mysql, error) {
 	var writeConf *DBConfig
 	ok, err := conf.Get("mysql_write", writeConf)
 	if !ok {
@@ -33,13 +33,6 @@ func New(conf configx.IConfig) (*_mysql, error) {
 	}
 	if err != nil {
 		return nil, fmt.Errorf("get mysql write config failed: %w", err)
-	}
-	writeDB, writeDSN, err := connectDB(writeConf.User, writeConf.Pass, writeConf.Host, writeConf.Port, writeConf.Database)
-	if err != nil {
-		return nil, fmt.Errorf("write db connect failed:%w", err)
-	}
-	res := &_mysql{
-		writeDB: writeDB,
 	}
 
 	var readConf *DBConfig
@@ -51,7 +44,17 @@ func New(conf configx.IConfig) (*_mysql, error) {
 	} else {
 		logrus.Warn("mysql read config not found")
 	}
+	return New(writeConf, readConf)
+}
 
+func New(writeConf, readConf *DBConfig) (*_mysql, error) {
+	writeDB, writeDSN, err := connectDB(writeConf.User, writeConf.Pass, writeConf.Host, writeConf.Port, writeConf.Database)
+	if err != nil {
+		return nil, fmt.Errorf("write db connect failed:%w", err)
+	}
+	res := &_mysql{
+		writeDB: writeDB,
+	}
 	if readConf != nil {
 		// 读库配置
 		readDB, readDSN, err := connectDB(readConf.User, readConf.Pass, readConf.Host, readConf.Port, readConf.Database)
