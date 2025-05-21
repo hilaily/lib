@@ -20,10 +20,7 @@ type MongoDBConfig struct {
 
 func NewFromConfig(conf configx.IConfig) (*mongo.Client, error) {
 	var config *MongoDBConfig
-	ok, err := conf.Get("mongo", config)
-	if !ok {
-		return nil, fmt.Errorf("mongo config not found")
-	}
+	err := conf.Get("mongo", config)
 	if err != nil {
 		return nil, fmt.Errorf("get mongo config failed: %w", err)
 	}
