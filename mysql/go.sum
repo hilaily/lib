@@ -3,8 +3,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/go-sql-driver/mysql v1.7.0 h1:ueSltNNllEqE3qcWBTD0iQd3IpL/6U+mJxLkazJ7YPc=
 github.com/go-sql-driver/mysql v1.7.0/go.mod h1:OXbVy3sEdcQ2Doequ6Z5BW6fXNQTmx+9S1MCJN5yJMI=
-github.com/hilaily/lib/configx v0.1.1 h1:bDigDmxhsSn/ma1rCfz1mR4OXohGJRIRcf5zEztclFw=
-github.com/hilaily/lib/configx v0.1.1/go.mod h1:zovUi2CWbVcP2DJ+PgUMLF1P+dhiJP1muBJsHBV9n+o=
+github.com/hilaily/lib/configx v0.2.0 h1:fvR/aJ5aQRezFRc/4eS4uKxZowd/Xk4Ii7FTD35RMZY=
+github.com/hilaily/lib/configx v0.2.0/go.mod h1:zovUi2CWbVcP2DJ+PgUMLF1P+dhiJP1muBJsHBV9n+o=
 github.com/hilaily/lib/env v0.3.0 h1:KQt8ya55y259bsx5o+vFhFWX1SfOrgSGUWLXMqMUtGI=
 github.com/hilaily/lib/env v0.3.0/go.mod h1:wHU7i5KevqPFHslOAKEwSC4ynFvAR8kkEHCIn1CVCC4=
 github.com/jinzhu/inflection v1.0.0 h1:K317FqzuhWc8YvSVlFMCCUb36O/S9MCKRDI7QkRKD/E=

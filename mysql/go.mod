@@ -3,7 +3,7 @@ module github.com/hilaily/lib/mysql
 go 1.24.0
 
 require (
-	github.com/hilaily/lib/configx v0.1.1
+	github.com/hilaily/lib/configx v0.2.0
 	github.com/sirupsen/logrus v1.9.3
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/gorm v1.26.1

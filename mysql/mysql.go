@@ -27,17 +27,14 @@ type DBConfig struct {
 
 func NewFromConfig(conf configx.IConfig) (*_mysql, error) {
 	var writeConf *DBConfig
-	ok, err := conf.Get("mysql_write", writeConf)
-	if !ok {
-		return nil, fmt.Errorf("mysql write config not found")
-	}
+	err := conf.Get("mysql_write", writeConf)
 	if err != nil {
 		return nil, fmt.Errorf("get mysql write config failed: %w", err)
 	}
 
 	var readConf *DBConfig
-	hasRead, err := conf.Get("mysql_read", readConf)
-	if hasRead {
+	if conf.IsExist("mysql_read") {
+		err = conf.Get("mysql_read", readConf)
 		if err != nil {
 			return nil, fmt.Errorf("get mysql read config failed: %w", err)
 		}
