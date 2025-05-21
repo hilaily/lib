@@ -7,7 +7,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.28.7
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.48
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.72.0
-	github.com/hilaily/lib/configx v0.1.1
+	github.com/hilaily/kit v0.7.14
+	github.com/hilaily/lib/configx v0.2.0
 	github.com/hilaily/lib/env v0.3.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.7.0
@@ -32,5 +33,6 @@ require (
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
+	golang.org/x/text v0.3.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

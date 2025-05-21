@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hilaily/kit/stringx"
 	"github.com/hilaily/lib/configx"
 	"github.com/sirupsen/logrus"
 )
@@ -25,6 +26,7 @@ var (
 
 type IS3 interface {
 	UploadFile(ctx context.Context, key string, data []byte) error
+	GenURL(ctx context.Context, key string) string
 	GetFileSize(ctx context.Context, key string) (int64, error)
 	GeneratePresignedURL(ctx context.Context, filename string, expires time.Duration) (*PreSignedInfo, error)
 	UploadFileWithPresignedURL(method, url string, data io.Reader) error
@@ -41,10 +43,7 @@ type S3Config struct {
 
 func NewS3ClientFromConfig(conf configx.IConfig) (IS3, error) {
 	var config *S3Config
-	ok, err := conf.Get("s3", config)
-	if !ok {
-		return nil, fmt.Errorf("s3 config not found")
-	}
+	err := conf.Get("s3", config)
 	if err != nil {
 		return nil, fmt.Errorf("get s3 config failed: %w", err)
 	}
@@ -57,7 +56,7 @@ func NewS3Client(conf *S3Config) (*s3Client, error) {
 	accessKey := conf.AccessKey
 	secretKey := conf.SecretKey
 	region := conf.Region
-	logrus.Info("oss config", "endpoint", endpoint, "accessKey", accessKey, "secretKey", secretKey, "region", region)
+	logrus.Debugf("oss config: endpoint: %s, accessKey: %s, region: %s", endpoint, accessKey, region)
 
 	// 加载 AWS 配置，包括凭证和自定义端点
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
@@ -77,7 +76,7 @@ func NewS3Client(conf *S3Config) (*s3Client, error) {
 		),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("无法加载 AWS 配置: %w", err)
+		return nil, fmt.Errorf("can not load aws config: %w", err)
 	}
 
 	// 创建 S3 客户端
@@ -88,11 +87,13 @@ func NewS3Client(conf *S3Config) (*s3Client, error) {
 	return &s3Client{
 		Client:     client,
 		BucketName: conf.BucketName,
+		Endpoint:   conf.Endpoint,
 	}, nil
 }
 
 // S3Client 定义了支持上传和获取文件大小的结构体
 type s3Client struct {
+	Endpoint   string
 	Client     *s3.Client
 	BucketName string
 }
@@ -114,7 +115,7 @@ func (s *s3Client) UploadFile(ctx context.Context, key string, data []byte) erro
 	// 执行上传操作
 	_, err := s.Client.PutObject(ctx, input)
 	if err != nil {
-		return fmt.Errorf("上传文件失败: %w", err)
+		return fmt.Errorf("upload file failed: %w", err)
 	}
 
 	return nil
@@ -134,9 +135,9 @@ func (s *s3Client) GetFileSize(ctx context.Context, key string) (int64, error) {
 	if err != nil {
 		var notFound *types.NotFound
 		if ok := errors.As(err, &notFound); ok {
-			return 0, fmt.Errorf("文件 %s 未找到", key)
+			return 0, fmt.Errorf("file %s not found", key)
 		}
-		return 0, fmt.Errorf("获取文件大小失败: %w", err)
+		return 0, fmt.Errorf("get file size failed: %w", err)
 	}
 
 	return *output.ContentLength, nil
@@ -153,7 +154,7 @@ func (s *s3Client) GeneratePresignedURL(ctx context.Context, filename string, ex
 
 	presignedRequest, err := presignClient.PresignPutObject(ctx, input, s3.WithPresignExpires(expires))
 	if err != nil {
-		return nil, fmt.Errorf("生成预签名 URL 失败: %w", err)
+		return nil, fmt.Errorf("generate presigned url failed: %w", err)
 	}
 
 	header := make(map[string]string, len(presignedRequest.SignedHeader))
@@ -173,7 +174,7 @@ func (s *s3Client) UploadFileWithPresignedURL(method, url string, data io.Reader
 	// 创建 HTTP PUT 请求
 	req, err := http.NewRequest(method, url, data)
 	if err != nil {
-		return fmt.Errorf("创建上传请求失败: %w", err)
+		return fmt.Errorf("create upload request failed: %w", err)
 	}
 
 	// 设置必要的头部信息，根据需要设置 Content-Type
@@ -187,23 +188,27 @@ func (s *s3Client) UploadFileWithPresignedURL(method, url string, data io.Reader
 	// 执行请求
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("执行上传请求失败: %w", err)
+		return fmt.Errorf("execute upload request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	// 读取响应体（可选）
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("读取响应失败: %w", err)
+		return fmt.Errorf("read response failed: %w", err)
 	}
 
 	// 检查响应状态码
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("上传失败，状态码: %d, 响应: %s", resp.StatusCode, string(body))
+		return fmt.Errorf("upload failed, status code: %d, response: %s", resp.StatusCode, string(body))
 	}
 
-	log.Printf("文件通过预签名 URL 上传成功")
+	log.Printf("file uploaded successfully through presigned url")
 	return nil
+}
+
+func (s *s3Client) GenURL(ctx context.Context, key string) string {
+	return stringx.URLJoin(s.Endpoint, s.BucketName, key)
 }
 
 type PreSignedInfo struct {
