@@ -1,6 +1,7 @@
 package configx
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -9,11 +10,13 @@ import (
 )
 
 var (
-	_ IConfig = &config{}
+	_               IConfig = &config{}
+	ErrPathNotFound         = errors.New("path not found")
 )
 
 type IConfig interface {
 	Get(path string, ptr any) (bool, error)
+	MustGet(path string, ptr any) error
 	Unmarshal(ptr any) error
 }
 
@@ -46,12 +49,22 @@ type config struct {
 	nodeMap     map[string]*yaml.Node
 }
 
+// Get
+// if path is not found, return false, nil
 func (c *config) Get(path string, ptr any) (bool, error) {
 	nodes, ok := c.nodeMap[path]
 	if !ok {
 		return false, nil
 	}
 	return true, nodes.Decode(ptr)
+}
+
+func (c *config) MustGet(path string, ptr any) error {
+	nodes, ok := c.nodeMap[path]
+	if !ok {
+		return fmt.Errorf("%w: %s", ErrPathNotFound, path)
+	}
+	return nodes.Decode(ptr)
 }
 
 func (c *config) Unmarshal(ptr any) error {
