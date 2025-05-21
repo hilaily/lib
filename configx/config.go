@@ -15,11 +15,10 @@ var (
 )
 
 type IConfig interface {
+	// IsExist check if the path exists
+	IsExist(path string) bool
 	// Get get config by path, it is just support first level path now
-	// if path not found, it will return false, nil
-	Get(path string, ptr any) (bool, error)
-	// MustGet if path not found, it will return a error
-	MustGet(path string, ptr any) error
+	Get(path string, ptr any) error
 	// Unmarshal whole config to ptr
 	Unmarshal(ptr any) error
 }
@@ -55,20 +54,17 @@ type config struct {
 
 // Get
 // if path is not found, return false, nil
-func (c *config) Get(path string, ptr any) (bool, error) {
+func (c *config) Get(path string, ptr any) error {
 	nodes, ok := c.nodeMap[path]
 	if !ok {
-		return false, nil
-	}
-	return true, nodes.Decode(ptr)
-}
-
-func (c *config) MustGet(path string, ptr any) error {
-	nodes, ok := c.nodeMap[path]
-	if !ok {
-		return fmt.Errorf("%w: %s", ErrPathNotFound, path)
+		return ErrPathNotFound
 	}
 	return nodes.Decode(ptr)
+}
+
+func (c *config) IsExist(path string) bool {
+	_, ok := c.nodeMap[path]
+	return ok
 }
 
 func (c *config) Unmarshal(ptr any) error {
