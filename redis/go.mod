@@ -3,7 +3,7 @@ module github.com/hilaily/lib/redis
 go 1.24.0
 
 require (
-	github.com/hilaily/lib/configx v0.1.1
+	github.com/hilaily/lib/configx v0.2.0
 	github.com/redis/go-redis/v9 v9.8.0
 )
 

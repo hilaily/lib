@@ -9,8 +9,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f h1:lO4WD4F/rVNCu3HqELle0jiPLLBs70cWOduZpkS1E78=
 github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f/go.mod h1:cuUVRXasLTGF7a8hSLbxyZXjz+1KgoB3wDUb6vlszIc=
-github.com/hilaily/lib/configx v0.1.1 h1:bDigDmxhsSn/ma1rCfz1mR4OXohGJRIRcf5zEztclFw=
-github.com/hilaily/lib/configx v0.1.1/go.mod h1:zovUi2CWbVcP2DJ+PgUMLF1P+dhiJP1muBJsHBV9n+o=
+github.com/hilaily/lib/configx v0.2.0 h1:fvR/aJ5aQRezFRc/4eS4uKxZowd/Xk4Ii7FTD35RMZY=
+github.com/hilaily/lib/configx v0.2.0/go.mod h1:zovUi2CWbVcP2DJ+PgUMLF1P+dhiJP1muBJsHBV9n+o=
 github.com/hilaily/lib/env v0.3.0 h1:KQt8ya55y259bsx5o+vFhFWX1SfOrgSGUWLXMqMUtGI=
 github.com/hilaily/lib/env v0.3.0/go.mod h1:wHU7i5KevqPFHslOAKEwSC4ynFvAR8kkEHCIn1CVCC4=
 github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=

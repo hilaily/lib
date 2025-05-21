@@ -20,14 +20,10 @@ type RedisConfig struct {
 
 func NewFromConfig(ctx context.Context, conf configx.IConfig) (*_redis, error) {
 	var config *RedisConfig
-	ok, err := conf.Get("redis", config)
-	if !ok {
-		return nil, fmt.Errorf("redis config not found")
-	}
+	err := conf.Get("redis", config)
 	if err != nil {
 		return nil, fmt.Errorf("get redis config failed: %w", err)
 	}
-
 	return NewRedis(ctx, config)
 }
 
