@@ -15,8 +15,12 @@ var (
 )
 
 type IConfig interface {
+	// Get get config by path, it is just support first level path now
+	// if path not found, it will return false, nil
 	Get(path string, ptr any) (bool, error)
+	// MustGet if path not found, it will return a error
 	MustGet(path string, ptr any) error
+	// Unmarshal whole config to ptr
 	Unmarshal(ptr any) error
 }
 
