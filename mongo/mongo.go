@@ -5,20 +5,23 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hilaily/lib/configx"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type MongoDBConfig struct {
-	URI    string `yaml:"uri"`
-	User   string `yaml:"user"`
-	Pass   string `yaml:"pass"`
-	Port   int    `yaml:"port"`
-	DBName string `yaml:"db_name"`
+	URI    string `yaml:"uri" mapstructure:"uri"`
+	User   string `yaml:"user" mapstructure:"user"`
+	Pass   string `yaml:"pass" mapstructure:"pass"`
+	Port   int    `yaml:"port" mapstructure:"port"`
+	DBName string `yaml:"db_name" mapstructure:"db_name"`
 }
 
-func NewFromConfig(conf configx.IConfig) (*mongo.Client, error) {
+type IConfig interface {
+	Get(path string, ptr any) error
+}
+
+func NewFromConfig(conf IConfig) (*mongo.Client, error) {
 	var config *MongoDBConfig
 	err := conf.Get("mongo", config)
 	if err != nil {
