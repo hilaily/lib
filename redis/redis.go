@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hilaily/lib/configx"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -18,7 +17,11 @@ type RedisConfig struct {
 	DB       int    `yaml:"db"`
 }
 
-func NewFromConfig(ctx context.Context, conf configx.IConfig) (*_redis, error) {
+type IConfig interface {
+	Get(path string, conf *RedisConfig) error
+}
+
+func NewFromConfig(ctx context.Context, conf IConfig) (*_redis, error) {
 	var config *RedisConfig
 	err := conf.Get("redis", config)
 	if err != nil {
