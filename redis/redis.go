@@ -18,12 +18,12 @@ type RedisConfig struct {
 }
 
 type IConfig interface {
-	Get(path string, conf *RedisConfig) error
+	Unmarshal(ptr any) error
 }
 
 func NewFromConfig(ctx context.Context, conf IConfig) (*_redis, error) {
 	var config *RedisConfig
-	err := conf.Get("redis", config)
+	err := conf.Unmarshal(config)
 	if err != nil {
 		return nil, fmt.Errorf("get redis config failed: %w", err)
 	}
