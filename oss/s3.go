@@ -41,12 +41,12 @@ type S3Config struct {
 }
 
 type IConfig interface {
-	Get(path string, conf *S3Config) error
+	Unmarshal(ptr any) error
 }
 
 func NewS3ClientFromConfig(conf IConfig) (IS3, error) {
 	var config *S3Config
-	err := conf.Get("s3", config)
+	err := conf.Unmarshal(config)
 	if err != nil {
 		return nil, fmt.Errorf("get s3 config failed: %w", err)
 	}
