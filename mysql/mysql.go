@@ -11,6 +11,10 @@ import (
 	"gorm.io/plugin/dbresolver"
 )
 
+var (
+	nilIConfig IConfig
+)
+
 type IMySQL interface {
 	GetWriteDB() *gorm.DB
 	GetReadDB() *gorm.DB
@@ -25,20 +29,19 @@ type DBConfig struct {
 }
 
 type IConfig interface {
-	Get(path string, conf *DBConfig) error
-	IsExist(path string) bool
+	Unmarshal(ptr any) error
 }
 
-func NewFromConfig(conf IConfig) (*_mysql, error) {
+func NewFromConfig(write IConfig, read IConfig) (*_mysql, error) {
 	var writeConf *DBConfig
-	err := conf.Get("mysql_write", writeConf)
+	err := write.Unmarshal(writeConf)
 	if err != nil {
 		return nil, fmt.Errorf("get mysql write config failed: %w", err)
 	}
 
 	var readConf *DBConfig
-	if conf.IsExist("mysql_read") {
-		err = conf.Get("mysql_read", readConf)
+	if read != nilIConfig {
+		err = read.Unmarshal(readConf)
 		if err != nil {
 			return nil, fmt.Errorf("get mysql read config failed: %w", err)
 		}
