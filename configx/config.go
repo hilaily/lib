@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hilaily/lib/env"
 	"gopkg.in/yaml.v3"
 )
 
@@ -23,8 +22,13 @@ type IConfig interface {
 	Unmarshal(ptr any) error
 }
 
+type IParam interface {
+	ConfigPath() string
+	GetEnv() string
+}
+
 // InitWithCustomConfig 允许用户在保留基础配置的同时添加自定义配置
-func New(_env env.IENV) (*config, error) {
+func New(_env IParam) (*config, error) {
 	configPath := _env.ConfigPath()
 	if configPath == "" {
 		configPath = fmt.Sprintf("./conf/config.%s.yaml", _env.GetEnv())
