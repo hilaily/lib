@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hilaily/lib/configx"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -25,7 +24,12 @@ type DBConfig struct {
 	Database string
 }
 
-func NewFromConfig(conf configx.IConfig) (*_mysql, error) {
+type IConfig interface {
+	Get(path string, conf *DBConfig) error
+	IsExist(path string) bool
+}
+
+func NewFromConfig(conf IConfig) (*_mysql, error) {
 	var writeConf *DBConfig
 	err := conf.Get("mysql_write", writeConf)
 	if err != nil {
