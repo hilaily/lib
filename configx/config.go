@@ -1,7 +1,6 @@
 package configx
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
@@ -9,23 +8,8 @@ import (
 )
 
 var (
-	_               IConfig = &config{}
-	ErrPathNotFound         = errors.New("path not found")
+	_ IConfig = &config{}
 )
-
-type IConfig interface {
-	// IsExist check if the path exists
-	IsExist(path string) bool
-	// Get get config by path, it is just support first level path now
-	Get(path string, ptr any) error
-	// Unmarshal whole config to ptr
-	Unmarshal(ptr any) error
-}
-
-type IParam interface {
-	ConfigPath() string
-	GetEnv() string
-}
 
 // InitWithCustomConfig 允许用户在保留基础配置的同时添加自定义配置
 func New(_env IParam) (*config, error) {
@@ -33,10 +17,13 @@ func New(_env IParam) (*config, error) {
 	if configPath == "" {
 		configPath = fmt.Sprintf("./conf/config.%s.yaml", _env.GetEnv())
 	}
+	return NewFromFile(configPath)
+}
 
-	fileContent, err := os.ReadFile(configPath)
+func NewFromFile(path string) (*config, error) {
+	fileContent, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("read config file failed, path: %s, err: %w", configPath, err)
+		return nil, fmt.Errorf("read config file failed, path: %s, err: %w", path, err)
 	}
 
 	var nodeMap map[string]*yaml.Node
@@ -73,4 +60,20 @@ func (c *config) IsExist(path string) bool {
 
 func (c *config) Unmarshal(ptr any) error {
 	return yaml.Unmarshal(c.fileContent, ptr)
+}
+
+func (c *config) Sub(path string) IUnmarshaler {
+	node := c.nodeMap[path]
+	return &unmarshaler{node: node}
+}
+
+type unmarshaler struct {
+	node *yaml.Node
+}
+
+func (u *unmarshaler) Unmarshal(ptr any) error {
+	if u.node == nil {
+		return ErrPathNotFound
+	}
+	return u.node.Decode(ptr)
 }
