@@ -18,12 +18,12 @@ type MongoDBConfig struct {
 }
 
 type IConfig interface {
-	Get(path string, ptr any) error
+	Unmarshal(ptr any) error
 }
 
 func NewFromConfig(conf IConfig) (*mongo.Client, error) {
 	var config *MongoDBConfig
-	err := conf.Get("mongo", config)
+	err := conf.Unmarshal(config)
 	if err != nil {
 		return nil, fmt.Errorf("get mongo config failed: %w", err)
 	}
