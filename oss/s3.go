@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hilaily/kit/stringx"
-	"github.com/hilaily/lib/configx"
 	"github.com/sirupsen/logrus"
 )
 
@@ -41,7 +40,11 @@ type S3Config struct {
 	BucketName string
 }
 
-func NewS3ClientFromConfig(conf configx.IConfig) (IS3, error) {
+type IConfig interface {
+	Get(path string, conf *S3Config) error
+}
+
+func NewS3ClientFromConfig(conf IConfig) (IS3, error) {
 	var config *S3Config
 	err := conf.Get("s3", config)
 	if err != nil {

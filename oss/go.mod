@@ -8,7 +8,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.48
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.72.0
 	github.com/hilaily/kit v0.7.14
-	github.com/hilaily/lib/configx v0.2.0
 	github.com/hilaily/lib/env v0.3.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.7.0
