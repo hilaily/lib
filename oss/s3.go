@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	_ IS3 = &s3Client{}
+	_ IS3 = &S3Client{}
 )
 
 type IS3 interface {
@@ -33,11 +33,11 @@ type IS3 interface {
 }
 
 type S3Config struct {
-	Endpoint   string
-	AccessKey  string
-	SecretKey  string
-	Region     string
-	BucketName string
+	Endpoint   string `json:"endpoint" yaml:"endpoint" mapstructure:"endpoint"`
+	AccessKey  string `json:"access_key" yaml:"access_key" mapstructure:"access_key"`
+	SecretKey  string `json:"secret_key" yaml:"secret_key" mapstructure:"secret_key"`
+	Region     string `json:"region" yaml:"region" mapstructure:"region"`
+	BucketName string `json:"bucket_name" yaml:"bucket_name" mapstructure:"bucket_name"`
 }
 
 type IConfig interface {
@@ -54,7 +54,7 @@ func NewS3ClientFromConfig(conf IConfig) (IS3, error) {
 }
 
 // NewS3Client 初始化并返回一个 S3Client 实例
-func NewS3Client(conf *S3Config) (*s3Client, error) {
+func NewS3Client(conf *S3Config) (*S3Client, error) {
 	endpoint := conf.Endpoint
 	accessKey := conf.AccessKey
 	secretKey := conf.SecretKey
@@ -87,7 +87,7 @@ func NewS3Client(conf *S3Config) (*s3Client, error) {
 		o.UsePathStyle = true
 	})
 
-	return &s3Client{
+	return &S3Client{
 		Client:     client,
 		BucketName: conf.BucketName,
 		Endpoint:   conf.Endpoint,
@@ -95,19 +95,19 @@ func NewS3Client(conf *S3Config) (*s3Client, error) {
 }
 
 // S3Client 定义了支持上传和获取文件大小的结构体
-type s3Client struct {
+type S3Client struct {
 	Endpoint   string
 	Client     *s3.Client
 	BucketName string
 }
 
-func (s *s3Client) GetClient() *s3.Client {
+func (s *S3Client) GetClient() *s3.Client {
 	return s.Client
 }
 
 // UploadFile 上传文件到指定的 S3 存储桶
 // key 是文件在 S3 中的路径，data 是文件的内容
-func (s *s3Client) UploadFile(ctx context.Context, key string, data []byte) error {
+func (s *S3Client) UploadFile(ctx context.Context, key string, data []byte) error {
 	// 创建上传输入参数
 	input := &s3.PutObjectInput{
 		Bucket: aws.String(s.BucketName),
@@ -126,7 +126,7 @@ func (s *s3Client) UploadFile(ctx context.Context, key string, data []byte) erro
 
 // GetFileSize 获取指定文件的大小（以字节为单位）
 // key 是文件在 S3 中的路径
-func (s *s3Client) GetFileSize(ctx context.Context, key string) (int64, error) {
+func (s *S3Client) GetFileSize(ctx context.Context, key string) (int64, error) {
 	// 创建 HeadObject 输入参数
 	input := &s3.HeadObjectInput{
 		Bucket: aws.String(s.BucketName),
@@ -147,7 +147,7 @@ func (s *s3Client) GetFileSize(ctx context.Context, key string) (int64, error) {
 }
 
 // GeneratePresignedURL 生成预签名 URL
-func (s *s3Client) GeneratePresignedURL(ctx context.Context, filename string, expires time.Duration) (*PreSignedInfo, error) {
+func (s *S3Client) GeneratePresignedURL(ctx context.Context, filename string, expires time.Duration) (*PreSignedInfo, error) {
 	presignClient := s3.NewPresignClient(s.Client)
 
 	input := &s3.PutObjectInput{
@@ -173,7 +173,7 @@ func (s *s3Client) GeneratePresignedURL(ctx context.Context, filename string, ex
 }
 
 // UploadFileWithPresignedURL 根据预签名的 URL 上传文件
-func (s *s3Client) UploadFileWithPresignedURL(method, url string, data io.Reader) error {
+func (s *S3Client) UploadFileWithPresignedURL(method, url string, data io.Reader) error {
 	// 创建 HTTP PUT 请求
 	req, err := http.NewRequest(method, url, data)
 	if err != nil {
@@ -210,7 +210,7 @@ func (s *s3Client) UploadFileWithPresignedURL(method, url string, data io.Reader
 	return nil
 }
 
-func (s *s3Client) GenURL(ctx context.Context, key string) string {
+func (s *S3Client) GenURL(ctx context.Context, key string) string {
 	return stringx.URLJoin(s.Endpoint, s.BucketName, key)
 }
 
