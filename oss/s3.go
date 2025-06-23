@@ -46,12 +46,12 @@ type IConfig interface {
 }
 
 func NewS3ClientFromConfig(conf IConfig) (IS3, error) {
-	var config *S3Config
-	err := conf.Unmarshal(config)
+	var config S3Config
+	err := conf.Unmarshal(&config)
 	if err != nil {
 		return nil, fmt.Errorf("get s3 config failed: %w", err)
 	}
-	return NewS3Client(config)
+	return NewS3Client(&config)
 }
 
 // NewS3Client 初始化并返回一个 S3Client 实例
