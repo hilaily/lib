@@ -38,6 +38,7 @@ type S3Config struct {
 	SecretKey  string `json:"secret_key" yaml:"secret_key" mapstructure:"secret_key"`
 	Region     string `json:"region" yaml:"region" mapstructure:"region"`
 	BucketName string `json:"bucket_name" yaml:"bucket_name" mapstructure:"bucket_name"`
+	Domain     string `json:"domain" yaml:"domain" mapstructure:"domain"`
 }
 
 type IConfig interface {
@@ -88,17 +89,15 @@ func NewS3Client(conf *S3Config) (*S3Client, error) {
 	})
 
 	return &S3Client{
-		Client:     client,
-		BucketName: conf.BucketName,
-		Endpoint:   conf.Endpoint,
+		Client: client,
+		cfg:    conf,
 	}, nil
 }
 
 // S3Client 定义了支持上传和获取文件大小的结构体
 type S3Client struct {
-	Endpoint   string
-	Client     *s3.Client
-	BucketName string
+	cfg    *S3Config
+	Client *s3.Client
 }
 
 func (s *S3Client) GetClient() *s3.Client {
@@ -110,7 +109,7 @@ func (s *S3Client) GetClient() *s3.Client {
 func (s *S3Client) UploadFile(ctx context.Context, key string, data []byte) error {
 	// 创建上传输入参数
 	input := &s3.PutObjectInput{
-		Bucket: aws.String(s.BucketName),
+		Bucket: aws.String(s.cfg.BucketName),
 		Key:    aws.String(key),
 		Body:   bytes.NewReader(data),
 	}
@@ -129,7 +128,7 @@ func (s *S3Client) UploadFile(ctx context.Context, key string, data []byte) erro
 func (s *S3Client) GetFileSize(ctx context.Context, key string) (int64, error) {
 	// 创建 HeadObject 输入参数
 	input := &s3.HeadObjectInput{
-		Bucket: aws.String(s.BucketName),
+		Bucket: aws.String(s.cfg.BucketName),
 		Key:    aws.String(key),
 	}
 
@@ -151,7 +150,7 @@ func (s *S3Client) GeneratePresignedURL(ctx context.Context, filename string, ex
 	presignClient := s3.NewPresignClient(s.Client)
 
 	input := &s3.PutObjectInput{
-		Bucket: aws.String(s.BucketName),
+		Bucket: aws.String(s.cfg.BucketName),
 		Key:    aws.String(filename),
 	}
 
@@ -211,7 +210,11 @@ func (s *S3Client) UploadFileWithPresignedURL(method, url string, data io.Reader
 }
 
 func (s *S3Client) GenURL(ctx context.Context, key string) string {
-	return stringx.URLJoin(s.Endpoint, s.BucketName, key)
+	domain := s.cfg.Domain
+	if domain == "" {
+		domain = s.cfg.Endpoint
+	}
+	return stringx.URLJoin(domain, s.cfg.BucketName, key)
 }
 
 type PreSignedInfo struct {
