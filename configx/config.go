@@ -26,11 +26,26 @@ func NewFromFile(path string) (*config, error) {
 		return nil, fmt.Errorf("read config file failed, path: %s, err: %w", path, err)
 	}
 
-	var nodeMap map[string]*yaml.Node
-	if err := yaml.Unmarshal(fileContent, &nodeMap); err != nil {
+	var node yaml.Node
+	if err := yaml.Unmarshal(fileContent, &node); err != nil {
 		return nil, fmt.Errorf("unmarshal config file failed, data: %s, err: %w", string(fileContent), err)
 	}
+	if node.Kind != yaml.DocumentNode {
+		return nil, fmt.Errorf("config file is not a document node, data: %s", string(fileContent))
+	}
+	if len(node.Content) == 0 {
+		return nil, fmt.Errorf("config file is empty, data: %s", string(fileContent))
+	}
+	if node.Content[0].Kind != yaml.MappingNode {
+		return nil, fmt.Errorf("config file is not a mapping node(first level must be a map), data: %s", string(fileContent))
+	}
 
+	nodeMap := make(map[string]*yaml.Node)
+	for i := 0; i < len(node.Content[0].Content); i += 2 {
+		key := node.Content[0].Content[i].Value
+		value := node.Content[0].Content[i+1]
+		nodeMap[key] = value
+	}
 	c := &config{
 		fileContent: fileContent,
 		nodeMap:     nodeMap,
