@@ -33,22 +33,22 @@ type IConfig interface {
 }
 
 func NewFromConfig(write IConfig, read IConfig) (*_mysql, error) {
-	var writeConf *DBConfig
-	err := write.Unmarshal(writeConf)
+	var writeConf DBConfig
+	err := write.Unmarshal(&writeConf)
 	if err != nil {
 		return nil, fmt.Errorf("get mysql write config failed: %w", err)
 	}
 
-	var readConf *DBConfig
+	var readConf DBConfig
 	if read != nilIConfig {
-		err = read.Unmarshal(readConf)
+		err = read.Unmarshal(&readConf)
 		if err != nil {
 			return nil, fmt.Errorf("get mysql read config failed: %w", err)
 		}
 	} else {
 		logrus.Warn("mysql read config not found")
 	}
-	return New(writeConf, readConf)
+	return New(&writeConf, &readConf)
 }
 
 func New(writeConf, readConf *DBConfig) (*_mysql, error) {

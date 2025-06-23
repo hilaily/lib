@@ -22,12 +22,12 @@ type IConfig interface {
 }
 
 func NewFromConfig(conf IConfig) (*mongo.Client, error) {
-	var config *MongoDBConfig
-	err := conf.Unmarshal(config)
+	var config MongoDBConfig
+	err := conf.Unmarshal(&config)
 	if err != nil {
 		return nil, fmt.Errorf("get mongo config failed: %w", err)
 	}
-	return NewClient(config)
+	return NewClient(&config)
 }
 
 func NewClient(conf *MongoDBConfig) (*mongo.Client, error) {

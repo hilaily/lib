@@ -22,12 +22,12 @@ type IConfig interface {
 }
 
 func NewFromConfig(ctx context.Context, conf IConfig) (*_redis, error) {
-	var config *RedisConfig
-	err := conf.Unmarshal(config)
+	var config RedisConfig
+	err := conf.Unmarshal(&config)
 	if err != nil {
 		return nil, fmt.Errorf("get redis config failed: %w", err)
 	}
-	return NewRedis(ctx, config)
+	return NewRedis(ctx, &config)
 }
 
 func NewRedis(ctx context.Context, config *RedisConfig) (*_redis, error) {
