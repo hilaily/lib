@@ -100,7 +100,7 @@ func (u *unmarshaler) Unmarshal(ptr any) error {
 	}
 	err := u.node.Decode(ptr)
 	if err != nil {
-		return fmt.Errorf("[configx] unmarshal config file failed, data: %s, err: %w", u.node.Content, err)
+		return fmt.Errorf("[configx] unmarshal config file failed, data: %v, err: %w", u.node.Content, err)
 	}
 	return nil
 }
