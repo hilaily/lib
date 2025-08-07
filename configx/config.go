@@ -23,21 +23,21 @@ func New(_env IParam) (*config, error) {
 func NewFromFile(path string) (*config, error) {
 	fileContent, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("read config file failed, path: %s, err: %w", path, err)
+		return nil, fmt.Errorf("[configx] read config file failed, path: %s, err: %w", path, err)
 	}
 
 	var node yaml.Node
 	if err := yaml.Unmarshal(fileContent, &node); err != nil {
-		return nil, fmt.Errorf("unmarshal config file failed, data: %s, err: %w", string(fileContent), err)
+		return nil, fmt.Errorf("[configx] unmarshal config file failed, data: %s, err: %w", string(fileContent), err)
 	}
 	if node.Kind != yaml.DocumentNode {
-		return nil, fmt.Errorf("config file is not a document node, data: %s", string(fileContent))
+		return nil, fmt.Errorf("[configx] config file is not a document node, data: %s", string(fileContent))
 	}
 	if len(node.Content) == 0 {
-		return nil, fmt.Errorf("config file is empty, data: %s", string(fileContent))
+		return nil, fmt.Errorf("[configx] config file is empty, data: %s", string(fileContent))
 	}
 	if node.Content[0].Kind != yaml.MappingNode {
-		return nil, fmt.Errorf("config file is not a mapping node(first level must be a map), data: %s", string(fileContent))
+		return nil, fmt.Errorf("[configx] config file is not a mapping node(first level must be a map), data: %s", string(fileContent))
 	}
 
 	nodeMap := make(map[string]*yaml.Node)
@@ -63,9 +63,13 @@ type config struct {
 func (c *config) Get(path string, ptr any) error {
 	nodes, ok := c.nodeMap[path]
 	if !ok {
-		return ErrPathNotFound
+		return fmt.Errorf("[configx] path: %s, %w", path, ErrPathNotFound)
 	}
-	return nodes.Decode(ptr)
+	err := nodes.Decode(ptr)
+	if err != nil {
+		return fmt.Errorf("[configx] get config failed, path: %s, err: %w", path, err)
+	}
+	return nil
 }
 
 func (c *config) IsExist(path string) bool {
@@ -74,7 +78,11 @@ func (c *config) IsExist(path string) bool {
 }
 
 func (c *config) Unmarshal(ptr any) error {
-	return yaml.Unmarshal(c.fileContent, ptr)
+	err := yaml.Unmarshal(c.fileContent, ptr)
+	if err != nil {
+		return fmt.Errorf("[configx] unmarshal config file failed, data: %s, err: %w", string(c.fileContent), err)
+	}
+	return nil
 }
 
 func (c *config) Sub(path string) IUnmarshaler {
@@ -88,7 +96,11 @@ type unmarshaler struct {
 
 func (u *unmarshaler) Unmarshal(ptr any) error {
 	if u.node == nil {
-		return ErrPathNotFound
+		return fmt.Errorf("[configx] %w", ErrPathNotFound)
 	}
-	return u.node.Decode(ptr)
+	err := u.node.Decode(ptr)
+	if err != nil {
+		return fmt.Errorf("[configx] unmarshal config file failed, data: %s, err: %w", u.node.Content, err)
+	}
+	return nil
 }
