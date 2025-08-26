@@ -6,7 +6,12 @@ import (
 	"testing"
 )
 
-// 示例：如何使用改进后的错误包
+func TestErrorx(t *testing.T) {
+	err := New(100000, "not found")
+	e := err.SetErr(errors.New("user not found")).WithExtra("user_id", 123).WithStack()
+	en, _ := e.MarshalJSON()
+	fmt.Println(string(en))
+}
 
 // 测试并发安全性
 func TestConcurrentSafety(t *testing.T) {

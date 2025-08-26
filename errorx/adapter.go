@@ -23,11 +23,6 @@ func (a *ConnectRPCAdapter) ToConnectRpcError(e *Err) *connect.Error {
 	}
 	if len(e.extra) > 0 {
 		maps.Copy(details, e.extra)
-
-		// 如果有堆栈信息，也添加进去（仅在开发环境）
-		if stackTrace := e.StackTrace(); stackTrace != "" {
-			details["stack_trace"] = stackTrace
-		}
 	}
 
 	if len(details) > 0 {

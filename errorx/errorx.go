@@ -56,14 +56,21 @@ type Err struct {
 }
 
 func (e *Err) MarshalJSON() ([]byte, error) {
+	detail := map[string]any{}
+	if e.err != nil {
+		detail["error"] = e.err.Error()
+	}
+	if len(e.extra) > 0 {
+		detail["extra"] = e.extra
+	}
+	if len(e.params) > 0 {
+		detail["params"] = e.params
+	}
+
 	return json.Marshal(map[string]any{
 		"code":    e.code,
 		"message": e.message,
-		"detail": map[string]any{
-			"err":    e.err,
-			"params": e.params,
-			"extra":  e.extra,
-		},
+		"detail":  detail,
 	})
 }
 
@@ -129,9 +136,7 @@ func (e *Err) WithStack() *Err {
 	if clone.extra == nil {
 		clone.extra = make(map[string]any)
 	}
-	stack := make([]uintptr, 32)
-	n := runtime.Callers(2, stack)
-	clone.extra["stack"] = stack[:n]
+	clone.extra["stack"] = e.stackTrace()
 	return clone
 }
 
@@ -151,19 +156,10 @@ func (e *Err) WithParams(params map[string]any) *Err {
 }
 
 // StackTrace 获取格式化的堆栈跟踪
-func (e *Err) StackTrace() string {
-	if e.extra == nil {
-		return ""
-	}
-	v, ok := e.extra["stack"]
-	if !ok {
-		return ""
-	}
-	stack, ok := v.([]uintptr)
-	if !ok {
-		return ""
-	}
-	frames := runtime.CallersFrames(stack)
+func (e *Err) stackTrace() string {
+	stack := make([]uintptr, 32)
+	n := runtime.Callers(3, stack)
+	frames := runtime.CallersFrames(stack[:n])
 	var trace string
 	for {
 		frame, more := frames.Next()
