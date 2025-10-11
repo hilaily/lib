@@ -136,7 +136,7 @@ func (h *Server) HandleConnection(w http.ResponseWriter, r *http.Request) {
 // handleMessage 处理接收到的消息
 func (h *Server) handleMessage(conn *websocket.Conn, message []byte, connID string) error {
 	// 尝试解析为命令消息
-	var typeMsg RequestMessage
+	var typeMsg FromMessage
 	err := json.Unmarshal(message, &typeMsg)
 	if err != nil {
 		return fmt.Errorf("failed to parse message: %w, data: %s", err, string(message))
@@ -150,7 +150,7 @@ func (h *Server) handleMessage(conn *websocket.Conn, message []byte, connID stri
 }
 
 func (h *Server) handlPingMessage(writer IWriter, message json.RawMessage, connID string) error {
-	return writer.WriteJSON(ResponseMessage{
+	return writer.WriteJSON(ToMessage{
 		Type: MessageTypePong,
 	})
 }

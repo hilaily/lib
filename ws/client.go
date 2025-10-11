@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/hilaily/kit/pool"
 	"github.com/sirupsen/logrus"
 )
 
@@ -32,6 +33,7 @@ type Client struct {
 
 	// 内部状态
 	reconnecting bool
+	pool         pool.IPool
 
 	connectConfig *ConnectConfig
 
@@ -61,6 +63,7 @@ func NewClient(_url string, ops ...ClientOptions) (*Client, error) {
 		ctx:           ctx,
 		cancel:        cancel,
 		done:          make(chan struct{}),
+		pool:          pool.NewPool(10),
 		log:           logrus.WithField("module", "ws"),
 	}
 	for _, opt := range ops {
@@ -185,7 +188,7 @@ func (c *Client) startHeartbeat() {
 		for {
 			select {
 			case <-ticker.C:
-				if err := c.SendMessage(map[string]string{"type": MessageTypePing}); err != nil {
+				if err := c.SendMessage(&ToMessage{Type: MessageTypePing}); err != nil {
 					c.log.Errorf("发送心跳失败: %v", err)
 				}
 			case <-c.ctx.Done():
@@ -363,7 +366,7 @@ func (c *Client) tryReconnect() error {
 
 // 处理接收到的消息
 func (c *Client) handleMessage(message []byte) {
-	var baseMsg RequestMessage
+	var baseMsg FromMessage
 	if err := json.Unmarshal(message, &baseMsg); err != nil {
 		c.log.WithError(err).Errorf("解析消息失败: %v", err)
 		if c.onError != nil {
@@ -378,8 +381,17 @@ func (c *Client) handleMessage(message []byte) {
 	case MessageTypePong:
 		return
 	default:
-		if handler, exists := c.handler[msgType]; exists {
-			handler(c.getWriter(), baseMsg.Data)
+		handler, exists := c.handler[msgType]
+		if exists {
+			c.pool.Go(
+				func() {
+					err := handler(c.getWriter(), baseMsg.Data)
+					if err != nil {
+						c.log.WithError(err).Errorf("处理消息失败: %v", err)
+						c.log.Debugf("处理消息失败: %v, msgType: %s, data: %s", err, msgType, string(baseMsg.Data))
+					}
+				},
+			)
 		} else {
 			c.log.WithField("msgType", msgType).Warn("未找到处理程序")
 		}

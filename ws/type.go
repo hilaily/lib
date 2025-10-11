@@ -19,8 +19,8 @@ var (
 type ClientOptions = func(*Client) error
 type ServerOptions = func(*Server) error
 
-// RequestMessage 命令消息
-type RequestMessage struct {
+// FromMessage 命令消息
+type FromMessage struct {
 	Type      string          `json:"type"`
 	Data      json.RawMessage `json:"data,omitempty"`
 	Timestamp int64           `json:"timestamp,omitempty"`
@@ -28,8 +28,8 @@ type RequestMessage struct {
 	Message   string          `json:"message,omitempty"`
 }
 
-// ResponseMessage 响应消息
-type ResponseMessage struct {
+// ToMessage 响应消息
+type ToMessage struct {
 	Type      string `json:"type"`
 	Data      any    `json:"data,omitempty"`
 	Timestamp int64  `json:"timestamp,omitempty"`

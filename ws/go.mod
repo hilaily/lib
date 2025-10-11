@@ -5,6 +5,7 @@ go 1.23.2
 require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/gorilla/websocket v1.5.3
+	github.com/hilaily/kit v0.7.14
 	github.com/sirupsen/logrus v1.9.3
 )
 
