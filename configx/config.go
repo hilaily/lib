@@ -86,7 +86,10 @@ func (c *config) Unmarshal(ptr any) error {
 }
 
 func (c *config) Sub(path string) IUnmarshaler {
-	node := c.nodeMap[path]
+	node, ok := c.nodeMap[path]
+	if !ok {
+		panic(fmt.Sprintf("path: %s not found", path))
+	}
 	return &unmarshaler{node: node}
 }
 
